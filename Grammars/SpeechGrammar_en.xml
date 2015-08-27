@@ -1,0 +1,54 @@
+﻿<!--
+Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
+Filename: SpeechGrammar_en.xml
+Version: 20150828
+-->
+
+<grammar
+  xmlns="http://www.w3.org/2001/06/grammar"
+  tag-format="semantics/1.0-literals"
+  version="1.0"
+  root="rootRule"
+  xml:lang="en-US"
+  >
+
+  <rule id="rootRule">
+    <one-of>
+
+      <item>
+        <tag>FORWARD</tag>
+        <one-of>
+          <item> forward </item>
+          <item> forwards </item>
+          <item> straight </item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>BACKWARD</tag>
+        <one-of>
+          <item> back </item>
+          <item> backward </item>
+          <item> backwards </item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>LEFT</tag>
+        <one-of>
+          <item> turn left </item>
+          <item> left </item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>RIGHT</tag>
+        <one-of>
+          <item> turn right </item>
+          <item> right </item>
+        </one-of>
+      </item>
+
+    </one-of>
+  </rule>
+</grammar>
