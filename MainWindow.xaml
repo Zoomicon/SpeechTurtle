@@ -39,6 +39,7 @@ Version: 20150828
             <TransformGroup>
               <TranslateTransform X="-49.5285" Y="-64.4295"/>
               <RotateTransform Angle="0" x:Name="turtleRotation"/>
+              <ScaleTransform ScaleX="0.4" ScaleY="0.4" />
               <TranslateTransform x:Name="turtleTranslation" X="300" Y="200"/>
             </TransformGroup>
           </Canvas.RenderTransform>

@@ -6,19 +6,19 @@
 // based on sample "SpeechBasics-WPF" for C# (https://msdn.microsoft.com/en-us/library/hh855387.aspx)
 // from Microsoft Kinect SDK 1.8 (http://www.microsoft.com/en-us/download/details.aspx?id=40278)
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows;
+using System.Windows.Documents;
+using System.Windows.Media;
+using Microsoft.Kinect;
+using Microsoft.Speech.Recognition;
+using Microsoft.Speech.AudioFormat;
+using System.Globalization;
+
 namespace SpeechTurtle
 {
-  using System;
-  using System.Collections.Generic;
-  using System.ComponentModel;
-  using System.IO;
-  using System.Text;
-  using System.Windows;
-  using System.Windows.Documents;
-  using System.Windows.Media;
-  using Microsoft.Kinect;
-  using Microsoft.Speech.Recognition;
-  using Microsoft.Speech.AudioFormat;
 
   /// <summary>
   /// Interaction logic for MainWindow.xaml
@@ -28,16 +28,17 @@ namespace SpeechTurtle
   public partial class MainWindow : Window
   {
 
+    #region --- Constants ---
+
     /// <summary>
-    /// Enumeration of directions in which turtle may be facing (using clock-wise degrees for values)
+    /// Speech utterance confidence below which we treat speech as if it hadn't been heard.
     /// </summary>
-    private enum Direction
-    {
-      Up = 0,
-      Right = 90,
-      Down = 180,
-      Left = 270
-    }
+    const double ConfidenceThreshold = 0.3;
+
+    /// <summary>
+    /// Number of pixels turtle should move forwards or backwards each time.
+    /// </summary>
+    const int DisplacementAmount = 10;
 
     /// <summary>
     /// Resource key for medium-gray-colored brush.
@@ -55,6 +56,10 @@ namespace SpeechTurtle
       { Direction.Left, new Point { X = -1, Y = 0 } }
     };
 
+    #endregion
+
+    #region --- Fields ---
+
     /// <summary>
     /// Active Kinect sensor.
     /// </summary>
@@ -66,14 +71,18 @@ namespace SpeechTurtle
     private SpeechRecognitionEngine speechEngine;
 
     /// <summary>
+    /// List of all UI span elements used to select recognized text.
+    /// </summary>
+    private List<Span> recognitionSpans;
+
+    /// <summary>
     /// Current direction where turtle is facing.
     /// </summary>
     private Direction curDirection = Direction.Up;
 
-    /// <summary>
-    /// List of all UI span elements used to select recognized text.
-    /// </summary>
-    private List<Span> recognitionSpans;
+    #endregion
+
+    #region --- Initialization ---
 
     /// <summary>
     /// Initializes a new instance of the MainWindow class.
@@ -84,25 +93,9 @@ namespace SpeechTurtle
       recognitionSpans = new List<Span> { forwardSpan, backSpan, rightSpan, leftSpan };
     }
 
-    /// <summary>
-    /// Gets the metadata for the speech recognizer (acoustic model) most suitable to
-    /// process audio from Kinect device.
-    /// </summary>
-    /// <returns>
-    /// RecognizerInfo if found, <code>null</code> otherwise.
-    /// </returns>
-    private static RecognizerInfo GetKinectRecognizer()
-    {
-      foreach (RecognizerInfo recognizer in SpeechRecognitionEngine.InstalledRecognizers())
-      {
-        string value;
-        recognizer.AdditionalInfo.TryGetValue("Kinect", out value);
-        if ( "True".Equals(value, StringComparison.OrdinalIgnoreCase) &&
-             "en-US".Equals(recognizer.Culture.Name, StringComparison.OrdinalIgnoreCase) )
-          return recognizer;
-      }
-      return null;
-    }
+    #endregion
+
+    #region --- Methods ---
 
     /// <summary>
     /// Execute initialization tasks.
@@ -111,28 +104,9 @@ namespace SpeechTurtle
     /// <param name="e">event arguments</param>
     private void WindowLoaded(object sender, RoutedEventArgs e)
     {
-      // Look through all sensors and start the first connected one.
-      // This requires that a Kinect is connected at the time of app startup.
+      sensor = KinectUtils.StartKinectSensor(); // This requires that a Kinect is connected at the time of app startup.
       // To make the app robust against plug/unplug,
       // Microsoft recommends using KinectSensorChooser provided in Microsoft.Kinect.Toolkit (See components in Toolkit Browser).
-      foreach (var potentialSensor in KinectSensor.KinectSensors)
-        if (potentialSensor.Status == KinectStatus.Connected)
-        {
-          sensor = potentialSensor;
-          break;
-        }
-
-      if (sensor != null)
-      {
-        try
-        {
-          sensor.Start(); // Start the sensor!
-        }
-        catch (IOException) // Some other application is streaming from the same Kinect sensor
-        {
-          sensor = null;
-        }
-      }
 
       RecognizerInfo ri = null;
       if (sensor == null)
@@ -144,11 +118,11 @@ namespace SpeechTurtle
       {
         statusBarText.Text = Properties.Resources.KinectReady;
         imgKinect.Visibility = Visibility.Visible;
-        ri = GetKinectRecognizer();
+        ri = KinectUtils.GetKinectRecognizer(CultureInfo.GetCultureInfoByIetfLanguageTag("en-US"));
       }
       speechEngine = (ri != null) ? new SpeechRecognitionEngine(ri.Id) : new SpeechRecognitionEngine();
 
-      Grammar g = CreateGrammarFromXML(); //could use SpeechGrammar_en.Create() to generate the grammar programmatically instead of loading it from an XML (resource) file
+      Grammar g = SpeechUtils.CreateGrammarFromXML(); //could use SpeechGrammar_en.Create() to generate the grammar programmatically instead of loading it from an XML (resource) file
       speechEngine.LoadGrammar(g);
 
       //setup recognition event handlers
@@ -160,21 +134,11 @@ namespace SpeechTurtle
       ////speechEngine.UpdateRecognizerSetting("AdaptationOn", 0);
 
       if (sensor != null)
-        speechEngine.SetInputToAudioStream(
-         sensor.AudioSource.Start(), new SpeechAudioFormatInfo(EncodingFormat.Pcm, 16000, 16, 1, 32000, 2, null));
+        speechEngine.SetInputToKinectSensor(sensor);
       else
         speechEngine.SetInputToDefaultAudioDevice();
-      speechEngine.RecognizeAsync(RecognizeMode.Multiple);
-    }
 
-    /// <summary>
-    /// Create a grammar from grammar definition XML (resource) file.
-    /// </summary>
-    /// <returns>Grammar</returns>
-    private Grammar CreateGrammarFromXML()
-    {
-      using (var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(Properties.Resources.SpeechGrammar_en)))
-        return new Grammar(memoryStream);
+      speechEngine.RecognizeAsync(RecognizeMode.Multiple); //start speech recognition (set to keep on firing speech recognition events, not just once)
     }
 
     /// <summary>
@@ -187,7 +151,6 @@ namespace SpeechTurtle
       if (null != sensor)
       {
         sensor.AudioSource.Stop();
-
         sensor.Stop();
         sensor = null;
       }
@@ -212,6 +175,10 @@ namespace SpeechTurtle
       }
     }
 
+    #endregion
+
+    #region --- Events ---
+
     /// <summary>
     /// Handler for recognized speech events.
     /// </summary>
@@ -219,12 +186,6 @@ namespace SpeechTurtle
     /// <param name="e">event arguments.</param>
     private void SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
     {
-      // Speech utterance confidence below which we treat speech as if it hadn't been heard
-      const double ConfidenceThreshold = 0.3;
-
-      // Number of pixels turtle should move forwards or backwards each time.
-      const int DisplacementAmount = 60;
-
       ClearRecognitionHighlights();
 
       if (e.Result.Confidence >= ConfidenceThreshold)
@@ -272,5 +233,8 @@ namespace SpeechTurtle
       ClearRecognitionHighlights();
     }
 
+    #endregion
+
   }
+
 }
