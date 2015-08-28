@@ -41,13 +41,14 @@ Version: 20150828
             <TransformGroup>
               <TranslateTransform X="-49.5285" Y="-64.4295"/>
               <RotateTransform Angle="0" x:Name="turtleRotation"/>
-              <ScaleTransform x:Name="turtleScale" ScaleX="0.4" ScaleY="0.4" />
+              <ScaleTransform x:Name="turtleScale" ScaleX="1" ScaleY="1" />
               <TranslateTransform x:Name="turtleTranslation" X="300" Y="200"/>
             </TransformGroup>
           </Canvas.RenderTransform>
 
+          <Path x:Name="TurtleHead"
+                Fill="{StaticResource KinectPurpleBrush}" Data="F1 M 61.715,29.865 C 64.850,26.697 66.789,22.343 66.789,17.534 C 66.789,7.850 58.939,0.000 49.256,0.000 C 39.572,0.000 31.722,7.850 31.722,17.534 C 31.722,22.357 33.671,26.723 36.822,29.893 C 40.737,28.375 44.935,27.538 49.305,27.538 C 53.648,27.538 57.820,28.365 61.715,29.865 Z"/>
           <Path Fill="{StaticResource KinectPurpleBrush}" Data="F1 M 45.151,113.209 C 51.105,121.359 44.672,128.859 44.672,128.859 C 52.939,125.963 54.227,115.555 54.418,113.072 C 52.744,113.324 51.039,113.466 49.305,113.466 C 47.900,113.466 46.516,113.375 45.151,113.209 Z"/>
-          <Path Fill="{StaticResource KinectPurpleBrush}" Data="F1 M 61.715,29.865 C 64.850,26.697 66.789,22.343 66.789,17.534 C 66.789,7.850 58.939,0.000 49.256,0.000 C 39.572,0.000 31.722,7.850 31.722,17.534 C 31.722,22.357 33.671,26.723 36.822,29.893 C 40.737,28.375 44.935,27.538 49.305,27.538 C 53.648,27.538 57.820,28.365 61.715,29.865 Z"/>
           <Path Fill="{StaticResource KinectPurpleBrush}" Data="F1 M 10.551,39.545 C 4.724,39.545 0.000,44.269 0.000,50.096 C 0.000,55.923 4.724,60.646 10.551,60.646 C 11.063,60.646 11.562,60.597 12.054,60.527 C 13.354,54.418 15.818,48.816 19.172,44.026 C 17.262,41.318 14.116,39.545 10.551,39.545 Z"/>
           <Path Fill="{StaticResource KinectPurpleBrush}" Data="F1 M 16.551,92.758 C 11.078,93.147 6.756,97.698 6.756,103.269 C 6.756,109.097 11.479,113.820 17.307,113.820 C 22.251,113.820 26.389,110.414 27.532,105.823 C 23.108,102.381 19.354,97.930 16.551,92.758 Z"/>
           <Path Fill="{StaticResource KinectPurpleBrush}" Data="F1 M 99.057,50.096 C 99.057,44.269 94.332,39.545 88.506,39.545 C 84.800,39.545 81.547,41.459 79.664,44.347 C 82.891,49.047 85.268,54.512 86.543,60.457 C 87.180,60.577 87.834,60.646 88.506,60.646 C 94.332,60.646 99.057,55.923 99.057,50.096 Z"/>
@@ -74,8 +75,8 @@ Version: 20150828
              "<Span x:Name="rightSpan">Turn Right</Span>",
              <LineBreak />
              <Separator Width="28" Visibility="Hidden"/>
-             "<Span x:Name="penupSpan">Pen up</Span>",
              "<Span x:Name="pendownSpan">Pen down</Span>",
+             "<Span x:Name="penupSpan">Pen up</Span>",
              "<Span x:Name="biggerSpan">Bigger</Span>",
              "<Span x:Name="smallerSpan">Smaller</Span>"
       </TextBlock>

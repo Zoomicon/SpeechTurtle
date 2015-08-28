@@ -35,16 +35,16 @@ namespace SpeechTurtle
       directions.Add(new SemanticResultValue("turn right", SpeechCommands.RIGHT));
       directions.Add(new SemanticResultValue("right", SpeechCommands.RIGHT));
 
-      //PENUP//
-      directions.Add(new SemanticResultValue("pen up", SpeechCommands.PENUP));
-      directions.Add(new SemanticResultValue("start drawing", SpeechCommands.PENUP));
-      directions.Add(new SemanticResultValue("draw", SpeechCommands.PENUP));
-
       //PENDOWN//
       directions.Add(new SemanticResultValue("pen down", SpeechCommands.PENDOWN));
-      directions.Add(new SemanticResultValue("stop drawing", SpeechCommands.PENDOWN));
-      directions.Add(new SemanticResultValue("don't draw", SpeechCommands.PENDOWN));
-      directions.Add(new SemanticResultValue("do not draw", SpeechCommands.PENDOWN));
+      directions.Add(new SemanticResultValue("start drawing", SpeechCommands.PENDOWN));
+      directions.Add(new SemanticResultValue("draw", SpeechCommands.PENDOWN));
+
+      //PENUP//
+      directions.Add(new SemanticResultValue("pen up", SpeechCommands.PENUP));
+      directions.Add(new SemanticResultValue("stop drawing", SpeechCommands.PENUP));
+      directions.Add(new SemanticResultValue("don't draw", SpeechCommands.PENUP));
+      directions.Add(new SemanticResultValue("do not draw", SpeechCommands.PENUP));
 
       //BIGGER//
       directions.Add(new SemanticResultValue("bigger", SpeechCommands.BIGGER));

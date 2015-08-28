@@ -50,18 +50,18 @@ Version: 20150828
       </item>
 
       <item>
-        <tag>PENUP</tag>
+        <tag>PENDOWN</tag>
         <one-of>
-          <item> pen up </item>
+          <item> pen down </item>
           <item> start drawing </item>
           <item> draw </item>
         </one-of>
       </item>
 
       <item>
-        <tag>PENDOWN</tag>
+        <tag>PENUP</tag>
         <one-of>
-          <item> pen down </item>
+          <item> pen up </item>
           <item> stop drawing </item>
           <item> don't draw </item>
           <item> do not draw </item>

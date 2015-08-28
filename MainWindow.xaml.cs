@@ -6,6 +6,9 @@
 // based on sample "SpeechBasics-WPF" for C# (https://msdn.microsoft.com/en-us/library/hh855387.aspx)
 // from Microsoft Kinect SDK 1.8 (http://www.microsoft.com/en-us/download/details.aspx?id=40278)
 
+//TODO: Add functionality to Record and name sequences of commands in order to repeat later using their name (find some way to allow recursion down to some max level though)
+//TODO: Add to grammar known color names if possible automatically
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,8 +17,9 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using Microsoft.Kinect;
 using Microsoft.Speech.Recognition;
-using Microsoft.Speech.AudioFormat;
 using System.Globalization;
+using System.Windows.Shapes;
+using System.Windows.Controls;
 
 namespace SpeechTurtle
 {
@@ -33,12 +37,7 @@ namespace SpeechTurtle
     /// <summary>
     /// Speech utterance confidence below which we treat speech as if it hadn't been heard.
     /// </summary>
-    const double ConfidenceThreshold = 0.3;
-
-    /// <summary>
-    /// Number of pixels turtle should move forwards or backwards each time.
-    /// </summary>
-    const int DisplacementAmount = 10;
+    const double ConfidenceThreshold = 0.3; //use higher values to require more accurate recognition
 
     /// <summary>
     /// Scaling factor for BIGGER / SMALLER commands.
@@ -75,6 +74,21 @@ namespace SpeechTurtle
     /// </summary>
     private Direction curDirection = Direction.Up;
 
+    /// <summary>
+    /// How much turtle should move forwards or backwards each time.
+    /// </summary>
+    private double displacementAmount = 50; //assuming initial turtle scale is 1
+
+    /// <summary>
+    /// How thick a line the turtle draws when pen is down.
+    /// </summary>
+    private double penThickness = 10; //assuming initial turtle scale is 1
+
+    /// <summary>
+    /// Keeps pen state (down=drawing).
+    /// </summary>
+    private bool penIsDown;
+
     #endregion
 
     #region --- Initialization ---
@@ -85,6 +99,54 @@ namespace SpeechTurtle
     public MainWindow()
     {
       InitializeComponent();
+    }
+
+    #endregion
+
+    #region --- Properties ---
+
+    public bool PenIsDown {
+      get { return penIsDown; }
+      set
+      {
+        penIsDown = value;
+        TurtleHead.Fill=(value)? Brushes.Black : (Brush)Resources["KinectPurpleBrush"]; //TODO: allow to change pen color (from given set of color names) via voice commands
+      }
+    }
+
+    public Direction CurrentDirection
+    {
+      get { return curDirection; }
+      set
+      {
+        curDirection = value;
+        turtleRotation.Angle = (int)curDirection;
+      }
+    }
+
+    public Point TurtlePosition
+    {
+      get { return new Point(turtleTranslation.X, turtleTranslation.Y); }
+      set
+      {
+        Point lastPos = TurtlePosition;
+        turtleTranslation.X = value.X;
+        turtleTranslation.Y = value.Y;
+        if (PenIsDown)
+        {
+          Point newPos = TurtlePosition;
+          Line line = new Line()
+          {
+            X1 = lastPos.X, Y1 = lastPos.Y,
+            X2 = newPos.X, Y2 = newPos.Y,
+            Stroke = Brushes.Black, //TODO: allow to change pen color (from given set of color names) via voice commands
+            StrokeThickness = penThickness,
+            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
+          };
+          line.SetValue(Canvas.ZIndexProperty, 1); //draw over the turtle so that it never hides the shape
+          playArea.Children.Add(line);
+        }
+      }
     }
 
     #endregion
@@ -207,48 +269,50 @@ namespace SpeechTurtle
         {
           case SpeechCommands.FORWARD:
             RecognitionHighlight(forwardSpan);
-            turtleTranslation.X = (playArea.Width + turtleTranslation.X + (DisplacementAmount * Displacements[curDirection].X)) % playArea.Width;
-            turtleTranslation.Y = (playArea.Height + turtleTranslation.Y + (DisplacementAmount * Displacements[curDirection].Y)) % playArea.Height;
+            TurtlePosition = new Point((playArea.Width + turtleTranslation.X + (displacementAmount * Displacements[CurrentDirection].X)) % playArea.Width,
+                                       (playArea.Height + turtleTranslation.Y + (displacementAmount * Displacements[CurrentDirection].Y)) % playArea.Height);
             break;
 
           case SpeechCommands.BACKWARD:
             RecognitionHighlight(backSpan);
-            turtleTranslation.X = (playArea.Width + turtleTranslation.X - (DisplacementAmount * Displacements[curDirection].X)) % playArea.Width;
-            turtleTranslation.Y = (playArea.Height + turtleTranslation.Y - (DisplacementAmount * Displacements[curDirection].Y)) % playArea.Height;
+            TurtlePosition = new Point((playArea.Width + turtleTranslation.X - (displacementAmount * Displacements[CurrentDirection].X)) % playArea.Width,
+                                       (playArea.Height + turtleTranslation.Y - (displacementAmount * Displacements[CurrentDirection].Y)) % playArea.Height);
             break;
 
           case SpeechCommands.LEFT:
             RecognitionHighlight(leftSpan);
-            curDirection = (Direction)(((int)curDirection + 270) % 360); //do not use - 90, do not want to end up with negative numbers (plus can't use Math.Abs on the result of the modulo operation, will end up with wrong number)
-            turtleRotation.Angle = (int)curDirection;
+            CurrentDirection = (Direction)(((int)CurrentDirection + 270) % 360); //do not use - 90, do not want to end up with negative numbers (plus can't use Math.Abs on the result of the modulo operation, will end up with wrong number)
             break;
 
           case SpeechCommands.RIGHT:
             RecognitionHighlight(rightSpan);
-            curDirection = (Direction)Math.Abs(((int)curDirection + 90) % 360);
-            turtleRotation.Angle = (int)curDirection;
-            break;
-
-          case SpeechCommands.PENUP:
-            RecognitionHighlight(penupSpan);
-            MessageBox.Show("Command not yet implemented");
+            CurrentDirection = (Direction)Math.Abs(((int)CurrentDirection + 90) % 360);
             break;
 
           case SpeechCommands.PENDOWN:
             RecognitionHighlight(pendownSpan);
-            MessageBox.Show("Command not yet implemented");
+            PenIsDown = true;
+            break;
+
+          case SpeechCommands.PENUP:
+            RecognitionHighlight(penupSpan);
+            PenIsDown = false;
             break;
 
           case SpeechCommands.BIGGER:
             RecognitionHighlight(biggerSpan);
             turtleScale.ScaleX *= ScaleFactor;
             turtleScale.ScaleY *= ScaleFactor;
+            displacementAmount *= ScaleFactor; //Bigger turtles move in bigger steps
+            penThickness *= ScaleFactor; //Bigger turtles leave thicker trails
             break;
 
           case SpeechCommands.SMALLER:
             RecognitionHighlight(smallerSpan);
             turtleScale.ScaleX /= ScaleFactor;
             turtleScale.ScaleY /= ScaleFactor;
+            displacementAmount /= ScaleFactor; //Smaller turtles move in smaller steps
+            penThickness /= ScaleFactor; //Smaller turtles leave thiner trails
             break;
         }
       }

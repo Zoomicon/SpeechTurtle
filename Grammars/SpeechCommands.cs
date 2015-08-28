@@ -16,8 +16,8 @@ namespace SpeechTurtle
     public const string BACKWARD = "BACKWARD";
     public const string LEFT = "LEFT";
     public const string RIGHT = "RIGHT";
-    public const string PENUP = "PENUP";
     public const string PENDOWN = "PENDOWN";
+    public const string PENUP = "PENUP";
     public const string BIGGER = "BIGGER";
     public const string SMALLER = "SMALLER";
 
