@@ -31,15 +31,17 @@ Version: 20150828
     </Grid.RowDefinitions>
 
     <Viewbox Grid.Row="1" Stretch="Uniform">
-      <Canvas Name="playArea"  Width="600" Height="400">
+      <Canvas x:Name="playArea"  Width="600" Height="400">
 
-        <Canvas Name="turtle" Width="99.057" Height="128.859">
-
+        <Canvas
+          x:Name="turtle"
+          Width="99.057" Height="128.859"
+          >
           <Canvas.RenderTransform>
             <TransformGroup>
               <TranslateTransform X="-49.5285" Y="-64.4295"/>
               <RotateTransform Angle="0" x:Name="turtleRotation"/>
-              <ScaleTransform ScaleX="0.4" ScaleY="0.4" />
+              <ScaleTransform x:Name="turtleScale" ScaleX="0.4" ScaleY="0.4" />
               <TranslateTransform x:Name="turtleTranslation" X="300" Y="200"/>
             </TransformGroup>
           </Canvas.RenderTransform>
@@ -58,7 +60,6 @@ Version: 20150828
           <Path Fill="{StaticResource LightGreyBrush}" Data="F1 M 32.848,67.358 C 32.240,67.966 31.254,67.966 30.646,67.358 L 23.482,60.195 C 22.875,59.586 22.875,58.601 23.482,57.994 L 30.646,50.830 C 31.254,50.222 32.240,50.221 32.848,50.830 L 40.012,57.994 C 40.619,58.601 40.619,59.586 40.012,60.195 L 32.848,67.358 Z"/>
           <Path Fill="{StaticResource LightGreyBrush}" Data="F1 M 32.848,90.669 C 32.240,91.277 31.254,91.277 30.646,90.669 L 23.482,83.505 C 22.875,82.898 22.875,81.912 23.482,81.304 L 30.646,74.140 C 31.254,73.533 32.240,73.532 32.848,74.140 L 40.012,81.304 C 40.619,81.912 40.619,82.898 40.012,83.505 L 32.848,90.669 Z"/>
           <Path Fill="{StaticResource LightGreyBrush}" Data="F1 M 50.676,104.757 C 50.068,105.365 49.082,105.365 48.475,104.757 L 41.311,97.593 C 40.703,96.986 40.703,96.000 41.311,95.392 L 48.475,88.228 C 49.082,87.621 50.067,87.621 50.676,88.228 L 57.840,95.392 C 58.447,96.000 58.447,96.986 57.840,97.593 L 50.676,104.757 Z"/>
-
         </Canvas>
 
       </Canvas>
@@ -66,14 +67,23 @@ Version: 20150828
 
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,5">
       <Image x:Name="imgKinect" Source="Images\Kinect.png" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Margin="10 0 0 0" Foreground="{StaticResource MediumGreyBrush}">
-        Say: "<Span Name="forwardSpan">Forward</Span>", "<Span Name="backSpan">Back</Span>", "<Span Name="leftSpan">Turn Left</Span>" or "<Span Name="rightSpan">Turn Right</Span>"
+      <TextBlock x:Name="txtSpeechCommands" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Margin="10 0 0 0" Foreground="{StaticResource MediumGreyBrush}">
+        Say: "<Span x:Name="forwardSpan">Forward</Span>",
+             "<Span x:Name="backSpan">Back</Span>",
+             "<Span x:Name="leftSpan">Turn Left</Span>",
+             "<Span x:Name="rightSpan">Turn Right</Span>",
+             <LineBreak />
+             <Separator Width="28" Visibility="Hidden"/>
+             "<Span x:Name="penupSpan">Pen up</Span>",
+             "<Span x:Name="pendownSpan">Pen down</Span>",
+             "<Span x:Name="biggerSpan">Bigger</Span>",
+             "<Span x:Name="smallerSpan">Smaller</Span>"
       </TextBlock>
     </StackPanel>
 
-    <StatusBar Grid.Row="3" Height="23" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}">
+    <StatusBar Grid.Row="3" Height="23" HorizontalAlignment="Stretch" x:Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}">
       <StatusBarItem Padding="0">
-        <TextBlock Name="statusBarText"></TextBlock>
+        <TextBlock x:Name="statusBarText"></TextBlock>
       </StatusBarItem>
     </StatusBar>
 

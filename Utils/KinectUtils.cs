@@ -11,12 +11,18 @@ using System.IO;
 
 namespace SpeechTurtle
 {
+  /// <summary>
+  /// Kinect-related utility methods
+  /// </summary>
   public static class KinectUtils
   {
 
+    /// <summary>
+    /// Looks through all connected Kinect sensors and tries to start one.
+    /// </summary>
+    /// <returns>Returns the first sensor that can be started succesfully, else null.</returns>
     public static KinectSensor StartKinectSensor()
     {
-      // Look through all sensors and return the first connected one that can be started succesfully, else return null.
       foreach (KinectSensor sensor in KinectSensor.KinectSensors)
         if (sensor.Status == KinectStatus.Connected)
           try
@@ -52,6 +58,12 @@ namespace SpeechTurtle
       return null;
     }
 
+    /// <summary>
+    /// Extension method for SpeechRecognitionEngine to set audio input from Kinect sensor, with optional settings of SpeechAudioFormat.
+    /// </summary>
+    /// <param name="speechEngine"></param>
+    /// <param name="sensor"></param>
+    /// <param name="speechAudioFormat"></param>
     public static void SetInputToKinectSensor(this SpeechRecognitionEngine speechEngine, KinectSensor sensor, SpeechAudioFormatInfo speechAudioFormat = null)
     {
       if (speechAudioFormat == null)

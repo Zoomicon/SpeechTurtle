@@ -41,9 +41,9 @@ namespace SpeechTurtle
     const int DisplacementAmount = 10;
 
     /// <summary>
-    /// Resource key for medium-gray-colored brush.
+    /// Scaling factor for BIGGER / SMALLER commands.
     /// </summary>
-    private const string UnrecognizedSpanForegroundKey = "MediumGreyBrush";
+    const double ScaleFactor = 1.5;
 
     /// <summary>
     /// Map between each direction and the displacement unit it represents.
@@ -71,11 +71,6 @@ namespace SpeechTurtle
     private SpeechRecognitionEngine speechEngine;
 
     /// <summary>
-    /// List of all UI span elements used to select recognized text.
-    /// </summary>
-    private List<Span> recognitionSpans;
-
-    /// <summary>
     /// Current direction where turtle is facing.
     /// </summary>
     private Direction curDirection = Direction.Up;
@@ -90,7 +85,6 @@ namespace SpeechTurtle
     public MainWindow()
     {
       InitializeComponent();
-      recognitionSpans = new List<Span> { forwardSpan, backSpan, rightSpan, leftSpan };
     }
 
     #endregion
@@ -164,14 +158,33 @@ namespace SpeechTurtle
     }
 
     /// <summary>
+    /// Highlight/Unhighlight command at recognition instructions.
+    /// </summary>
+    /// <param name="span"></param>
+    private void RecognitionHighlight(Span span, bool highlight = true)
+    {
+      if (highlight)
+      {
+        span.Foreground = Brushes.DeepSkyBlue;
+        span.FontWeight = FontWeights.Bold;
+      }
+      else
+      {
+        span.Foreground = (Brush)Resources["MediumGreyBrush"];
+        span.FontWeight = FontWeights.Normal;
+      }
+    }
+
+    /// <summary>
     /// Remove any highlighting from recognition instructions.
     /// </summary>
     private void ClearRecognitionHighlights()
     {
-      foreach (Span span in recognitionSpans)
+      foreach (Inline inline in txtSpeechCommands.Inlines)
       {
-        span.Foreground = (Brush)Resources[UnrecognizedSpanForegroundKey];
-        span.FontWeight = FontWeights.Normal;
+        Span span = inline as Span;
+        if (span != null)
+          RecognitionHighlight(span, false);
       }
     }
 
@@ -192,32 +205,50 @@ namespace SpeechTurtle
       {
         switch (e.Result.Semantics.Value.ToString())
         {
-          case "FORWARD":
-            forwardSpan.Foreground = Brushes.DeepSkyBlue;
-            forwardSpan.FontWeight = FontWeights.Bold;
+          case SpeechCommands.FORWARD:
+            RecognitionHighlight(forwardSpan);
             turtleTranslation.X = (playArea.Width + turtleTranslation.X + (DisplacementAmount * Displacements[curDirection].X)) % playArea.Width;
             turtleTranslation.Y = (playArea.Height + turtleTranslation.Y + (DisplacementAmount * Displacements[curDirection].Y)) % playArea.Height;
             break;
 
-          case "BACKWARD":
-            backSpan.Foreground = Brushes.DeepSkyBlue;
-            backSpan.FontWeight = FontWeights.Bold;
+          case SpeechCommands.BACKWARD:
+            RecognitionHighlight(backSpan);
             turtleTranslation.X = (playArea.Width + turtleTranslation.X - (DisplacementAmount * Displacements[curDirection].X)) % playArea.Width;
             turtleTranslation.Y = (playArea.Height + turtleTranslation.Y - (DisplacementAmount * Displacements[curDirection].Y)) % playArea.Height;
             break;
 
-          case "LEFT":
-            leftSpan.Foreground = Brushes.DeepSkyBlue;
-            leftSpan.FontWeight = FontWeights.Bold;
+          case SpeechCommands.LEFT:
+            RecognitionHighlight(leftSpan);
             curDirection = (Direction)(((int)curDirection + 270) % 360); //do not use - 90, do not want to end up with negative numbers (plus can't use Math.Abs on the result of the modulo operation, will end up with wrong number)
             turtleRotation.Angle = (int)curDirection;
             break;
 
-          case "RIGHT":
-            rightSpan.Foreground = Brushes.DeepSkyBlue;
-            rightSpan.FontWeight = FontWeights.Bold;
+          case SpeechCommands.RIGHT:
+            RecognitionHighlight(rightSpan);
             curDirection = (Direction)Math.Abs(((int)curDirection + 90) % 360);
             turtleRotation.Angle = (int)curDirection;
+            break;
+
+          case SpeechCommands.PENUP:
+            RecognitionHighlight(penupSpan);
+            MessageBox.Show("Command not yet implemented");
+            break;
+
+          case SpeechCommands.PENDOWN:
+            RecognitionHighlight(pendownSpan);
+            MessageBox.Show("Command not yet implemented");
+            break;
+
+          case SpeechCommands.BIGGER:
+            RecognitionHighlight(biggerSpan);
+            turtleScale.ScaleX *= ScaleFactor;
+            turtleScale.ScaleY *= ScaleFactor;
+            break;
+
+          case SpeechCommands.SMALLER:
+            RecognitionHighlight(smallerSpan);
+            turtleScale.ScaleX /= ScaleFactor;
+            turtleScale.ScaleY /= ScaleFactor;
             break;
         }
       }

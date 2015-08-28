@@ -66,7 +66,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Direction.cs" />
+    <Compile Include="Models\Direction.cs" />
+    <Compile Include="Grammars\SpeechCommands.cs" />
     <Compile Include="Grammars\SpeechGrammar_en.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -76,8 +77,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SpeechUtils.cs" />
-    <Compile Include="KinectUtils.cs" />
+    <Compile Include="Utils\SpeechUtils.cs" />
+    <Compile Include="Utils\KinectUtils.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DesignTime>True</DesignTime>
       <DependentUpon>MainWindow.xaml</DependentUpon>

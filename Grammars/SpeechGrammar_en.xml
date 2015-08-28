@@ -49,6 +49,41 @@ Version: 20150828
         </one-of>
       </item>
 
+      <item>
+        <tag>PENUP</tag>
+        <one-of>
+          <item> pen up </item>
+          <item> start drawing </item>
+          <item> draw </item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>PENDOWN</tag>
+        <one-of>
+          <item> pen down </item>
+          <item> stop drawing </item>
+          <item> don't draw </item>
+          <item> do not draw </item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>BIGGER</tag>
+        <one-of>
+          <item> bigger </item>
+          <item> enlarge </item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>SMALLER</tag>
+        <one-of>
+          <item> smaller </item>
+          <item> shrink </item>
+        </one-of>
+      </item>
+
     </one-of>
   </rule>
 </grammar>

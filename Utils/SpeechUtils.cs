@@ -8,6 +8,9 @@ using System.Text;
 
 namespace SpeechTurtle
 {
+  /// <summary>
+  /// Speech-related utility methods
+  /// </summary>
   public static class SpeechUtils
   {
 
