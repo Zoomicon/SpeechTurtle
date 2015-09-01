@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: SpeechGrammar_en.cs
-//Version: 20150828
+//Version: 20150901
 
 using Microsoft.Speech.Recognition;
 using System.Globalization;
@@ -15,47 +15,47 @@ namespace SpeechTurtle
     /// </summary>
     public static Grammar Create()
     {
-      var directions = new Choices();
+      var commands = new Choices();
 
       //FORWARD//
-      directions.Add(new SemanticResultValue("forward", SpeechCommands.FORWARD));
-      directions.Add(new SemanticResultValue("forwards", SpeechCommands.FORWARD));
-      directions.Add(new SemanticResultValue("straight", SpeechCommands.FORWARD));
+      commands.Add(new SemanticResultValue("forward", SpeechCommands.FORWARD));
+      commands.Add(new SemanticResultValue("forwards", SpeechCommands.FORWARD));
+      commands.Add(new SemanticResultValue("straight", SpeechCommands.FORWARD));
 
       //BACKWARD//
-      directions.Add(new SemanticResultValue("back", SpeechCommands.BACKWARD));
-      directions.Add(new SemanticResultValue("backward", SpeechCommands.BACKWARD));
-      directions.Add(new SemanticResultValue("backwards", SpeechCommands.BACKWARD));
+      commands.Add(new SemanticResultValue("back", SpeechCommands.BACKWARD));
+      commands.Add(new SemanticResultValue("backward", SpeechCommands.BACKWARD));
+      commands.Add(new SemanticResultValue("backwards", SpeechCommands.BACKWARD));
 
       //LEFT//
-      directions.Add(new SemanticResultValue("turn left", SpeechCommands.LEFT));
-      directions.Add(new SemanticResultValue("left", SpeechCommands.LEFT));
+      commands.Add(new SemanticResultValue("turn left", SpeechCommands.LEFT));
+      commands.Add(new SemanticResultValue("left", SpeechCommands.LEFT));
 
       //RIGHT//
-      directions.Add(new SemanticResultValue("turn right", SpeechCommands.RIGHT));
-      directions.Add(new SemanticResultValue("right", SpeechCommands.RIGHT));
+      commands.Add(new SemanticResultValue("turn right", SpeechCommands.RIGHT));
+      commands.Add(new SemanticResultValue("right", SpeechCommands.RIGHT));
 
       //PENDOWN//
-      directions.Add(new SemanticResultValue("pen down", SpeechCommands.PENDOWN));
-      directions.Add(new SemanticResultValue("start drawing", SpeechCommands.PENDOWN));
-      directions.Add(new SemanticResultValue("draw", SpeechCommands.PENDOWN));
+      commands.Add(new SemanticResultValue("pen down", SpeechCommands.PENDOWN));
+      commands.Add(new SemanticResultValue("start drawing", SpeechCommands.PENDOWN));
+      commands.Add(new SemanticResultValue("draw", SpeechCommands.PENDOWN));
 
       //PENUP//
-      directions.Add(new SemanticResultValue("pen up", SpeechCommands.PENUP));
-      directions.Add(new SemanticResultValue("stop drawing", SpeechCommands.PENUP));
-      directions.Add(new SemanticResultValue("don't draw", SpeechCommands.PENUP));
-      directions.Add(new SemanticResultValue("do not draw", SpeechCommands.PENUP));
+      commands.Add(new SemanticResultValue("pen up", SpeechCommands.PENUP));
+      commands.Add(new SemanticResultValue("stop drawing", SpeechCommands.PENUP));
+      commands.Add(new SemanticResultValue("don't draw", SpeechCommands.PENUP));
+      commands.Add(new SemanticResultValue("do not draw", SpeechCommands.PENUP));
 
       //BIGGER//
-      directions.Add(new SemanticResultValue("bigger", SpeechCommands.BIGGER));
-      directions.Add(new SemanticResultValue("enlarge", SpeechCommands.BIGGER));
+      commands.Add(new SemanticResultValue("bigger", SpeechCommands.BIGGER));
+      commands.Add(new SemanticResultValue("enlarge", SpeechCommands.BIGGER));
 
       //SMALLER//
-      directions.Add(new SemanticResultValue("smaller", SpeechCommands.SMALLER));
-      directions.Add(new SemanticResultValue("shrink", SpeechCommands.SMALLER));
+      commands.Add(new SemanticResultValue("smaller", SpeechCommands.SMALLER));
+      commands.Add(new SemanticResultValue("shrink", SpeechCommands.SMALLER));
 
       var gb = new GrammarBuilder { Culture = CultureInfo.GetCultureInfoByIetfLanguageTag("en") };
-      gb.Append(directions);
+      gb.Append(commands);
 
       return new Grammar(gb);
     }

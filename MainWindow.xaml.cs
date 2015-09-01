@@ -1,25 +1,27 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: MainWindows.xaml.cs
-//Version: 20150828
+//Version: 20150901
 
 //Credits:
 // based on sample "SpeechBasics-WPF" for C# (https://msdn.microsoft.com/en-us/library/hh855387.aspx)
 // from Microsoft Kinect SDK 1.8 (http://www.microsoft.com/en-us/download/details.aspx?id=40278)
 
 //TODO: Add functionality to Record and name sequences of commands in order to repeat later using their name (find some way to allow recursion down to some max level though)
-//TODO: Add to grammar known color names if possible automatically
+//TODO: Add history and UNDO/REDO commands (and possibly also display the history like a log with the current position and back being black and the undone stuff that can be redone being grey)
+//TODO: Apart from saying a color to change pen color, add extra more verbose command to change pen/foreground and background colors (as phrases). See https://msdn.microsoft.com/en-us/library/system.speech.recognition.choices(v=vs.110).aspx on how to do it
 
+using Microsoft.Kinect;
+using Microsoft.Speech.Recognition;
+using SpeechTurtle.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using Microsoft.Kinect;
-using Microsoft.Speech.Recognition;
-using System.Globalization;
 using System.Windows.Shapes;
-using System.Windows.Controls;
 
 namespace SpeechTurtle
 {
@@ -87,7 +89,17 @@ namespace SpeechTurtle
     /// <summary>
     /// Keeps pen state (down=drawing).
     /// </summary>
-    private bool penIsDown;
+    private bool penIsDown = true;
+
+    /// <summary>
+    /// Keeps pen color (used when pen is down to draw).
+    /// </summary>
+    private Color penColor = Colors.Black;
+
+    /// <summary>
+    /// Keeps pen brush (used when pen is down to draw).
+    /// </summary>
+    private Brush penBrush = new SolidColorBrush(Colors.Black);
 
     #endregion
 
@@ -99,6 +111,77 @@ namespace SpeechTurtle
     public MainWindow()
     {
       InitializeComponent();
+      ShowPenColor();
+    }
+
+    /// <summary>
+    /// Execute initialization tasks.
+    /// </summary>
+    /// <param name="sender">object sending the event</param>
+    /// <param name="e">event arguments</param>
+    private void WindowLoaded(object sender, RoutedEventArgs e)
+    {
+      sensor = KinectUtils.StartKinectSensor(); // This requires that a Kinect is connected at the time of app startup.
+      // To make the app robust against plug/unplug,
+      // Microsoft recommends using KinectSensorChooser provided in Microsoft.Kinect.Toolkit (See components in Toolkit Browser).
+
+      RecognizerInfo ri = null;
+      if (sensor == null)
+      {
+        statusBarText.Text = Properties.Resources.NoKinectReady;
+        imgKinect.Visibility = Visibility.Hidden;
+      }
+      else
+      {
+        statusBarText.Text = Properties.Resources.KinectReady;
+        imgKinect.Visibility = Visibility.Visible;
+        ri = KinectUtils.GetKinectRecognizer(CultureInfo.GetCultureInfoByIetfLanguageTag("en-US"));
+      }
+      speechEngine = (ri != null) ? new SpeechRecognitionEngine(ri.Id) : new SpeechRecognitionEngine();
+
+      speechEngine.LoadGrammar(SpeechUtils.CreateGrammarFromXML(Properties.Resources.SpeechGrammar_en, "Main")); //could use SpeechGrammar_en.Create() to generate the grammar programmatically instead of loading it from an XML (resource) file
+      speechEngine.LoadGrammar(SpeechUtils.CreateGrammarFromNames(ColorUtils.GetKnownColorNames(), "en", "Colors"));
+
+      //setup recognition event handlers
+      speechEngine.SpeechRecognized += SpeechRecognized;
+      speechEngine.SpeechRecognitionRejected += SpeechRejected;
+
+      // For long recognition sessions (a few hours or more), it may be beneficial to turn off adaptation of the acoustic model.
+      // This will prevent recognition accuracy from degrading over time.
+      ////speechEngine.UpdateRecognizerSetting("AdaptationOn", 0);
+
+      if (sensor != null)
+        speechEngine.SetInputToKinectSensor(sensor);
+      else
+        speechEngine.SetInputToDefaultAudioDevice();
+
+      speechEngine.RecognizeAsync(RecognizeMode.Multiple); //start speech recognition (set to keep on firing speech recognition events, not just once)
+    }
+
+    #endregion
+
+    #region --- Cleanup ---
+
+    /// <summary>
+    /// Execute uninitialization tasks.
+    /// </summary>
+    /// <param name="sender">object sending the event.</param>
+    /// <param name="e">event arguments.</param>
+    private void WindowClosing(object sender, CancelEventArgs e)
+    {
+      if (null != sensor)
+      {
+        sensor.AudioSource.Stop();
+        sensor.Stop();
+        sensor = null;
+      }
+
+      if (null != speechEngine)
+      {
+        speechEngine.SpeechRecognized -= SpeechRecognized;
+        speechEngine.SpeechRecognitionRejected -= SpeechRejected;
+        speechEngine.RecognizeAsyncStop();
+      }
     }
 
     #endregion
@@ -110,7 +193,18 @@ namespace SpeechTurtle
       set
       {
         penIsDown = value;
-        TurtleHead.Fill=(value)? Brushes.Black : (Brush)Resources["KinectPurpleBrush"]; //TODO: allow to change pen color (from given set of color names) via voice commands
+        ShowPenColor();
+      }
+    }
+
+    public Color PenColor
+    {
+      get { return penColor; }
+      set
+      {
+        penColor = value;
+        penBrush = new SolidColorBrush(penColor);
+        ShowPenColor();
       }
     }
 
@@ -139,7 +233,7 @@ namespace SpeechTurtle
           {
             X1 = lastPos.X, Y1 = lastPos.Y,
             X2 = newPos.X, Y2 = newPos.Y,
-            Stroke = Brushes.Black, //TODO: allow to change pen color (from given set of color names) via voice commands
+            Stroke = penBrush,
             StrokeThickness = penThickness,
             StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
           };
@@ -153,71 +247,12 @@ namespace SpeechTurtle
 
     #region --- Methods ---
 
-    /// <summary>
-    /// Execute initialization tasks.
-    /// </summary>
-    /// <param name="sender">object sending the event</param>
-    /// <param name="e">event arguments</param>
-    private void WindowLoaded(object sender, RoutedEventArgs e)
+    private void ShowPenColor()
     {
-      sensor = KinectUtils.StartKinectSensor(); // This requires that a Kinect is connected at the time of app startup.
-      // To make the app robust against plug/unplug,
-      // Microsoft recommends using KinectSensorChooser provided in Microsoft.Kinect.Toolkit (See components in Toolkit Browser).
-
-      RecognizerInfo ri = null;
-      if (sensor == null)
-      {
-        statusBarText.Text = Properties.Resources.NoKinectReady;
-        imgKinect.Visibility = Visibility.Hidden;
-      }
-      else
-      {
-        statusBarText.Text = Properties.Resources.KinectReady;
-        imgKinect.Visibility = Visibility.Visible;
-        ri = KinectUtils.GetKinectRecognizer(CultureInfo.GetCultureInfoByIetfLanguageTag("en-US"));
-      }
-      speechEngine = (ri != null) ? new SpeechRecognitionEngine(ri.Id) : new SpeechRecognitionEngine();
-
-      Grammar g = SpeechUtils.CreateGrammarFromXML(); //could use SpeechGrammar_en.Create() to generate the grammar programmatically instead of loading it from an XML (resource) file
-      speechEngine.LoadGrammar(g);
-
-      //setup recognition event handlers
-      speechEngine.SpeechRecognized += SpeechRecognized;
-      speechEngine.SpeechRecognitionRejected += SpeechRejected;
-
-      // For long recognition sessions (a few hours or more), it may be beneficial to turn off adaptation of the acoustic model.
-      // This will prevent recognition accuracy from degrading over time.
-      ////speechEngine.UpdateRecognizerSetting("AdaptationOn", 0);
-
-      if (sensor != null)
-        speechEngine.SetInputToKinectSensor(sensor);
-      else
-        speechEngine.SetInputToDefaultAudioDevice();
-
-      speechEngine.RecognizeAsync(RecognizeMode.Multiple); //start speech recognition (set to keep on firing speech recognition events, not just once)
+      TurtleHead.Fill = (PenIsDown) ? penBrush : (Brush)Resources["KinectPurpleBrush"];
     }
 
-    /// <summary>
-    /// Execute uninitialization tasks.
-    /// </summary>
-    /// <param name="sender">object sending the event.</param>
-    /// <param name="e">event arguments.</param>
-    private void WindowClosing(object sender, CancelEventArgs e)
-    {
-      if (null != sensor)
-      {
-        sensor.AudioSource.Stop();
-        sensor.Stop();
-        sensor = null;
-      }
-
-      if (null != speechEngine)
-      {
-        speechEngine.SpeechRecognized -= SpeechRecognized;
-        speechEngine.SpeechRecognitionRejected -= SpeechRejected;
-        speechEngine.RecognizeAsyncStop();
-      }
-    }
+    #region Recognition highlighting
 
     /// <summary>
     /// Highlight/Unhighlight command at recognition instructions.
@@ -252,6 +287,8 @@ namespace SpeechTurtle
 
     #endregion
 
+    #endregion
+
     #region --- Events ---
 
     /// <summary>
@@ -265,18 +302,19 @@ namespace SpeechTurtle
 
       if (e.Result.Confidence >= ConfidenceThreshold)
       {
-        switch (e.Result.Semantics.Value.ToString())
+        string command = e.Result.Semantics.Value.ToString();
+        switch (command)
         {
           case SpeechCommands.FORWARD:
             RecognitionHighlight(forwardSpan);
             TurtlePosition = new Point((playArea.Width + turtleTranslation.X + (displacementAmount * Displacements[CurrentDirection].X)) % playArea.Width,
-                                       (playArea.Height + turtleTranslation.Y + (displacementAmount * Displacements[CurrentDirection].Y)) % playArea.Height);
+                                        (playArea.Height + turtleTranslation.Y + (displacementAmount * Displacements[CurrentDirection].Y)) % playArea.Height);
             break;
 
           case SpeechCommands.BACKWARD:
             RecognitionHighlight(backSpan);
             TurtlePosition = new Point((playArea.Width + turtleTranslation.X - (displacementAmount * Displacements[CurrentDirection].X)) % playArea.Width,
-                                       (playArea.Height + turtleTranslation.Y - (displacementAmount * Displacements[CurrentDirection].Y)) % playArea.Height);
+                                        (playArea.Height + turtleTranslation.Y - (displacementAmount * Displacements[CurrentDirection].Y)) % playArea.Height);
             break;
 
           case SpeechCommands.LEFT:
@@ -314,7 +352,12 @@ namespace SpeechTurtle
             displacementAmount /= ScaleFactor; //Smaller turtles move in smaller steps
             penThickness /= ScaleFactor; //Smaller turtles leave thiner trails
             break;
+
+          default:
+            PenColor = command.GetKnownColor();
+            break;
         }
+
       }
     }
 

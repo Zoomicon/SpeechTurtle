@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: KinectUtils.cs
-//Version: 20150828
+//Version: 20150829
 
 using Microsoft.Kinect;
 using Microsoft.Speech.AudioFormat;
@@ -9,7 +9,7 @@ using System;
 using System.Globalization;
 using System.IO;
 
-namespace SpeechTurtle
+namespace SpeechTurtle.Utils
 {
   /// <summary>
   /// Kinect-related utility methods
