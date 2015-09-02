@@ -70,7 +70,8 @@ Version: 20150902
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,5">
       <Image x:Name="imgKinect" Source="Images\Kinect.png" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Center"/>
       <TextBlock x:Name="txtSpeechCommands" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Margin="10 0 0 0" Foreground="{StaticResource MediumGreyBrush}">
-        Say: "<Span x:Name="forwardSpan">Forward</Span>",
+        Say: "<Span x:Name="closeSpan">Close</Span>",
+             "<Span x:Name="forwardSpan">Forward</Span>",
              "<Span x:Name="backSpan">Back</Span>",
              "<Span x:Name="leftSpan">Turn Left</Span>",
              "<Span x:Name="rightSpan">Turn Right</Span>",
@@ -79,7 +80,7 @@ Version: 20150902
              "<Span x:Name="pendownSpan">Pen down</Span>",
              "<Span x:Name="penupSpan">Pen up</Span>",
              "<Span x:Name="biggerSpan">Bigger</Span>",
-             "<Span x:Name="smallerSpan">Smaller</Span>" or a <Hyperlink x:Name="colorsHyperlink" Click="colorsHyperlink_Click">color name</Hyperlink>
+             "<Span x:Name="smallerSpan">Smaller</Span>" or names of "<Hyperlink x:Name="colorsHyperlink" Click="colorsHyperlink_Click">Colors</Hyperlink>"
       </TextBlock>
     </StackPanel>
 

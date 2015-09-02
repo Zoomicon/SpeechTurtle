@@ -1,7 +1,7 @@
 ﻿<!--
 Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 Filename: SpeechGrammar_en.xml
-Version: 20150828
+Version: 20150902
 -->
 
 <grammar
@@ -14,6 +14,13 @@ Version: 20150828
 
   <rule id="rootRule">
     <one-of>
+
+      <item>
+        <tag>CLOSE</tag>
+        <one-of>
+          <item> close </item>
+        </one-of>
+      </item>
 
       <item>
         <tag>FORWARD</tag>
@@ -81,6 +88,14 @@ Version: 20150828
         <one-of>
           <item> smaller </item>
           <item> shrink </item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>COLORS</tag>
+        <one-of>
+          <item> colors </item>
+          <item> color </item>
         </one-of>
       </item>
 

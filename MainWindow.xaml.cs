@@ -307,6 +307,12 @@ namespace SpeechTurtle
         string command = e.Result.Semantics.Value.ToString();
         switch (command)
         {
+          case SpeechCommands.CLOSE:
+            RecognitionHighlight(closeSpan);
+            if (!ColorUtils.CloseKnownColorsMessageBox())
+              Close(); //if the known colors MessageBox isn't open to close it, close the main app window (exit the app)
+            break;
+
           case SpeechCommands.FORWARD:
             RecognitionHighlight(forwardSpan);
             TurtlePosition = new Point((playArea.Width + turtleTranslation.X + (displacementAmount * Displacements[CurrentDirection].X)) % playArea.Width,
@@ -355,7 +361,13 @@ namespace SpeechTurtle
             penThickness /= ScaleFactor; //Smaller turtles leave thiner trails
             break;
 
+          case SpeechCommands.COLORS:
+            RecognitionHighlight(colorsHyperlink);
+            Dispatcher.BeginInvoke(new Action(() => { ColorUtils.ShowKnownColors(); })); //Do not call colorsHyperlink.DoClick() or ColorUtils.ShowKnownColors() directly since the latter uses MessageBox.Show which would block the speech recognition event thread, so we wouldn't be able to then speak the CLOSE command
+            break;
+
           default:
+            RecognitionHighlight(colorsHyperlink);
             PenColor = command.GetKnownColor();
             break;
         }

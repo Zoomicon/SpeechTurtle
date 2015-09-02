@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: SpeechGrammar_en.cs
-//Version: 20150901
+//Version: 20150902
 
 using Microsoft.Speech.Recognition;
 using System.Globalization;
@@ -16,6 +16,9 @@ namespace SpeechTurtle
     public static Grammar Create()
     {
       var commands = new Choices();
+
+      //CLOSE//
+      commands.Add(new SemanticResultValue("close", SpeechCommands.CLOSE));
 
       //FORWARD//
       commands.Add(new SemanticResultValue("forward", SpeechCommands.FORWARD));
@@ -53,6 +56,10 @@ namespace SpeechTurtle
       //SMALLER//
       commands.Add(new SemanticResultValue("smaller", SpeechCommands.SMALLER));
       commands.Add(new SemanticResultValue("shrink", SpeechCommands.SMALLER));
+
+      //COLORS//
+      commands.Add(new SemanticResultValue("colors", SpeechCommands.COLORS));
+      commands.Add(new SemanticResultValue("color", SpeechCommands.COLORS));
 
       var gb = new GrammarBuilder { Culture = CultureInfo.GetCultureInfoByIetfLanguageTag("en") };
       gb.Append(commands);

@@ -2,6 +2,7 @@
 //Filename: ColorUtils.cs
 //Version: 20150902
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -15,6 +16,25 @@ namespace SpeechTurtle.Utils
   /// </summary>
   public static class ColorUtils //based on http://stackoverflow.com/questions/4475391/wpf-silverlight-find-the-name-of-a-color
   {
+
+    #region --- Constants ---
+
+    private const string KNOWN_COLORS_MESSAGEBOX_CAPTION = "Known colors";
+
+    #endregion
+
+    #region --- Win32 Interop ---
+
+    private const int WM_CLOSE = 0x0010;
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+    static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+    static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+
+    #endregion
+
     #region --- Fields ---
 
     private static Dictionary<string, Color> knownColors; //=null
@@ -60,7 +80,16 @@ namespace SpeechTurtle.Utils
 
     public static void ShowKnownColors()
     {
-      MessageBox.Show("Known colors: \n\n" + string.Join(", ", GetKnownColorNames()));
+      MessageBox.Show(string.Join(", ", GetKnownColorNames()), KNOWN_COLORS_MESSAGEBOX_CAPTION);
+    }
+
+    public static bool CloseKnownColorsMessageBox()
+    {
+      IntPtr mbWnd = FindWindow(null, KNOWN_COLORS_MESSAGEBOX_CAPTION);
+      if (mbWnd == IntPtr.Zero) return false; //Known colors MessageBox not found
+
+      SendMessage(mbWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero); //close that MessageBox
+      return true;
     }
 
     #endregion
