@@ -291,6 +291,8 @@ namespace SpeechTurtle
 
     #region --- Events ---
 
+    #region Speech events
+
     /// <summary>
     /// Handler for recognized speech events.
     /// </summary>
@@ -371,6 +373,13 @@ namespace SpeechTurtle
       ClearRecognitionHighlights();
     }
 
+    #endregion
+
+    /// <summary>
+    /// Handles the Click event of the colorsHyperlink control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
     private void colorsHyperlink_Click(object sender, RoutedEventArgs e)
     {
       ColorUtils.ShowKnownColors();
