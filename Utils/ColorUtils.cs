@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: ColorUtils.cs
-//Version: 20150901
+//Version: 20150902
 
 using System.Collections.Generic;
 using System.Linq;
