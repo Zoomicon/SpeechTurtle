@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Windows;
 using System.Windows.Media;
 
 namespace SpeechTurtle.Utils
@@ -55,6 +56,11 @@ namespace SpeechTurtle.Utils
     public static string[] GetKnownColorNames()
     {
       return GetKnownColors().Keys.ToArray();
+    }
+
+    public static void ShowKnownColors()
+    {
+      MessageBox.Show("Known colors: \n\n" + string.Join(", ", GetKnownColorNames()));
     }
 
     #endregion

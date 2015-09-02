@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: MainWindows.xaml.cs
-//Version: 20150901
+//Version: 20150902
 
 //Credits:
 // based on sample "SpeechBasics-WPF" for C# (https://msdn.microsoft.com/en-us/library/hh855387.aspx)
@@ -249,7 +249,7 @@ namespace SpeechTurtle
 
     private void ShowPenColor()
     {
-      TurtleHead.Fill = (PenIsDown) ? penBrush : (Brush)Resources["KinectPurpleBrush"];
+      turtleHead.Fill = (PenIsDown) ? penBrush : (Brush)Resources["KinectPurpleBrush"];
     }
 
     #region Recognition highlighting
@@ -369,6 +369,11 @@ namespace SpeechTurtle
     private void SpeechRejected(object sender, SpeechRecognitionRejectedEventArgs e)
     {
       ClearRecognitionHighlights();
+    }
+
+    private void colorsHyperlink_Click(object sender, RoutedEventArgs e)
+    {
+      ColorUtils.ShowKnownColors();
     }
 
     #endregion
