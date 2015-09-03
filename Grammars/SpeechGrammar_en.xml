@@ -1,7 +1,7 @@
 ﻿<!--
 Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 Filename: SpeechGrammar_en.xml
-Version: 20150902
+Version: 20150903
 -->
 
 <grammar
@@ -32,7 +32,7 @@ Version: 20150902
       </item>
 
       <item>
-        <tag>BACKWARD</tag>
+        <tag>BACK</tag>
         <one-of>
           <item> back </item>
           <item> backward </item>

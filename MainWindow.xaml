@@ -1,17 +1,20 @@
 ﻿<!--
 Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 Filename: MainWindows.xaml
-Version: 20150902
+Version: 20150903
 -->
 
 <Window x:Class="SpeechTurtle.MainWindow"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="SpeechTurtle"
-    Width="640" Height="600"
-    Loaded="WindowLoaded"
-    Closing="WindowClosing"
-    >
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+
+      Title="SpeechTurtle"
+  Width="640" Height="600"
+
+  Loaded="Window_Loaded"
+  Closing="Window_Closing"
+  KeyDown="Window_KeyDown"
+  >
 
   <Window.Resources>
     <SolidColorBrush x:Key="MediumGreyBrush" Color="#ff6e6e6e"/>
@@ -67,20 +70,39 @@ Version: 20150902
       </Canvas>
     </Viewbox>
 
-    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,5">
-      <Image x:Name="imgKinect" Source="Images\Kinect.png" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-      <TextBlock x:Name="txtSpeechCommands" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Margin="10 0 0 0" Foreground="{StaticResource MediumGreyBrush}">
-        Say: "<Span x:Name="closeSpan">Close</Span>",
-             "<Span x:Name="forwardSpan">Forward</Span>",
-             "<Span x:Name="backSpan">Back</Span>",
-             "<Span x:Name="leftSpan">Turn Left</Span>",
-             "<Span x:Name="rightSpan">Turn Right</Span>",
-             <LineBreak />
-             <Separator Width="28" Visibility="Hidden"/>
-             "<Span x:Name="pendownSpan">Pen down</Span>",
-             "<Span x:Name="penupSpan">Pen up</Span>",
-             "<Span x:Name="biggerSpan">Bigger</Span>",
-             "<Span x:Name="smallerSpan">Smaller</Span>" or names of "<Hyperlink x:Name="colorsHyperlink" Click="colorsHyperlink_Click">Colors</Hyperlink>"
+    <StackPanel
+      Grid.Row="2"
+      Orientation="Horizontal"
+      HorizontalAlignment="Stretch"
+      Margin="0,5"
+      >
+      <Image
+        x:Name="imgKinect"
+        Source="Images\Kinect.png"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Center"
+        />
+      <TextBlock
+        x:Name="txtCommands"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        FontSize="16"
+        Margin="10 0 0 0"
+        Foreground="{StaticResource MediumGreyBrush}"
+        >
+        Say:
+          <Hyperlink x:Name="CLOSE" Click="Command_Click">Cl<Run FontWeight="SemiBold">o</Run>se</Hyperlink>,
+          <Hyperlink x:Name="FORWARD" Click="Command_Click"><Run FontWeight="SemiBold">F</Run>orward</Hyperlink>,
+          <Hyperlink x:Name="BACK" Click="Command_Click"><Run FontWeight="SemiBold">B</Run>ack</Hyperlink>,
+          <Hyperlink x:Name="LEFT" Click="Command_Click">Turn <Run FontWeight="SemiBold">L</Run>eft</Hyperlink>,
+          <Hyperlink x:Name="RIGHT" Click="Command_Click">Turn <Run FontWeight="SemiBold">R</Run>ight</Hyperlink>,
+          <LineBreak />
+          <Separator Width="28" Visibility="Hidden"/>
+          <Hyperlink x:Name="PENDOWN" Click="Command_Click">Pen <Run FontWeight="SemiBold">D</Run>own</Hyperlink>,
+          <Hyperlink x:Name="PENUP" Click="Command_Click">Pen <Run FontWeight="SemiBold">U</Run>p</Hyperlink>,
+          <Hyperlink x:Name="BIGGER" Click="Command_Click">Bi<Run FontWeight="SemiBold">g</Run>ger</Hyperlink>,
+          <Hyperlink x:Name="SMALLER" Click="Command_Click"><Run FontWeight="SemiBold">S</Run>maller</Hyperlink>
+          or names of <Hyperlink x:Name="COLORS" Click="Command_Click"><Run FontWeight="SemiBold">C</Run>olors</Hyperlink>
       </TextBlock>
     </StackPanel>
 

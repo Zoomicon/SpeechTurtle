@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: MainWindows.xaml.cs
-//Version: 20150902
+//Version: 20150903
 
 //Credits:
 // based on sample "SpeechBasics-WPF" for C# (https://msdn.microsoft.com/en-us/library/hh855387.aspx)
@@ -9,6 +9,7 @@
 //TODO: Add functionality to Record and name sequences of commands in order to repeat later using their name (find some way to allow recursion down to some max level though)
 //TODO: Add history and UNDO/REDO commands (and possibly also display the history like a log with the current position and back being black and the undone stuff that can be redone being grey)
 //TODO: Apart from saying a color to change pen color, add extra more verbose command to change pen/foreground and background colors (as phrases). See https://msdn.microsoft.com/en-us/library/system.speech.recognition.choices(v=vs.110).aspx on how to do it
+//TODO: see open issues section at http://SpeechTurtle.codeplex.com
 
 using Microsoft.Kinect;
 using Microsoft.Speech.Recognition;
@@ -20,6 +21,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
@@ -39,7 +41,7 @@ namespace SpeechTurtle
     /// <summary>
     /// Speech utterance confidence below which we treat speech as if it hadn't been heard.
     /// </summary>
-    const double ConfidenceThreshold = 0.3; //use higher values to require more accurate recognition
+    const double ConfidenceThreshold = 0.8; //use higher values to require more accurate recognition
 
     /// <summary>
     /// Scaling factor for BIGGER / SMALLER commands.
@@ -119,7 +121,7 @@ namespace SpeechTurtle
     /// </summary>
     /// <param name="sender">object sending the event</param>
     /// <param name="e">event arguments</param>
-    private void WindowLoaded(object sender, RoutedEventArgs e)
+    private void Window_Loaded(object sender, RoutedEventArgs e)
     {
       sensor = KinectUtils.StartKinectSensor(); // This requires that a Kinect is connected at the time of app startup.
       // To make the app robust against plug/unplug,
@@ -143,8 +145,8 @@ namespace SpeechTurtle
       speechEngine.LoadGrammar(SpeechUtils.CreateGrammarFromNames(ColorUtils.GetKnownColorNames(), "en", "Colors"));
 
       //setup recognition event handlers
-      speechEngine.SpeechRecognized += SpeechRecognized;
-      speechEngine.SpeechRecognitionRejected += SpeechRejected;
+      speechEngine.SpeechRecognized += Speech_Recognized;
+      speechEngine.SpeechRecognitionRejected += Speech_Rejected;
 
       // For long recognition sessions (a few hours or more), it may be beneficial to turn off adaptation of the acoustic model.
       // This will prevent recognition accuracy from degrading over time.
@@ -167,7 +169,7 @@ namespace SpeechTurtle
     /// </summary>
     /// <param name="sender">object sending the event.</param>
     /// <param name="e">event arguments.</param>
-    private void WindowClosing(object sender, CancelEventArgs e)
+    private void Window_Closing(object sender, CancelEventArgs e)
     {
       if (null != sensor)
       {
@@ -178,8 +180,8 @@ namespace SpeechTurtle
 
       if (null != speechEngine)
       {
-        speechEngine.SpeechRecognized -= SpeechRecognized;
-        speechEngine.SpeechRecognitionRejected -= SpeechRejected;
+        speechEngine.SpeechRecognized -= Speech_Recognized;
+        speechEngine.SpeechRecognitionRejected -= Speech_Rejected;
         speechEngine.RecognizeAsyncStop();
       }
     }
@@ -188,7 +190,11 @@ namespace SpeechTurtle
 
     #region --- Properties ---
 
-    public bool PenIsDown {
+    /// <summary>
+    /// Returns whether pen is up or down (=drawing).
+    /// </summary>
+    public bool PenIsDown
+    {
       get { return penIsDown; }
       set
       {
@@ -197,6 +203,9 @@ namespace SpeechTurtle
       }
     }
 
+    /// <summary>
+    /// Returns the pen color.
+    /// </summary>
     public Color PenColor
     {
       get { return penColor; }
@@ -208,6 +217,9 @@ namespace SpeechTurtle
       }
     }
 
+    /// <summary>
+    /// Returns the current turtle direction.
+    /// </summary>
     public Direction CurrentDirection
     {
       get { return curDirection; }
@@ -218,6 +230,9 @@ namespace SpeechTurtle
       }
     }
 
+    /// <summary>
+    /// Returns the current turtle position.
+    /// </summary>
     public Point TurtlePosition
     {
       get { return new Point(turtleTranslation.X, turtleTranslation.Y); }
@@ -231,11 +246,14 @@ namespace SpeechTurtle
           Point newPos = TurtlePosition;
           Line line = new Line()
           {
-            X1 = lastPos.X, Y1 = lastPos.Y,
-            X2 = newPos.X, Y2 = newPos.Y,
+            X1 = lastPos.X,
+            Y1 = lastPos.Y,
+            X2 = newPos.X,
+            Y2 = newPos.Y,
             Stroke = penBrush,
             StrokeThickness = penThickness,
-            StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round
+            StrokeStartLineCap = PenLineCap.Round,
+            StrokeEndLineCap = PenLineCap.Round
           };
           line.SetValue(Canvas.ZIndexProperty, 1); //draw over the turtle so that it never hides the shape
           playArea.Children.Add(line);
@@ -247,41 +265,126 @@ namespace SpeechTurtle
 
     #region --- Methods ---
 
+    /// <summary>
+    /// Display the current pen color (change the turtle head's fill color if the pen is down).
+    /// </summary>
     private void ShowPenColor()
     {
       turtleHead.Fill = (PenIsDown) ? penBrush : (Brush)Resources["KinectPurpleBrush"];
     }
 
-    #region Recognition highlighting
+    /// <summary>
+    /// Execute a known command by name.
+    /// </summary>
+    /// <param name="command">The command to execute</param>
+    /// <param name="confidence">The confidence level (has to be above ConfidenceThreshold value)</param>
+    public void ExecuteCommand(string command, double confidence)
+    {
+      ClearCommandHighlights();
+
+      if (command == null) return; //this is needed, else "command.GetKnownColor" will fail if command==null
+
+      if (confidence >= ConfidenceThreshold)
+      {
+        switch (command)
+        {
+          case Commands.CLOSE:
+            RecognitionHighlight(CLOSE);
+            if (!ColorUtils.CloseKnownColorsMessageBox())
+              Close(); //if the known colors MessageBox isn't open to close it, close the main app window (exit the app)
+            break;
+
+          case Commands.FORWARD:
+            RecognitionHighlight(FORWARD);
+            TurtlePosition = new Point((playArea.Width + turtleTranslation.X + (displacementAmount * Displacements[CurrentDirection].X)) % playArea.Width,
+                                                (playArea.Height + turtleTranslation.Y + (displacementAmount * Displacements[CurrentDirection].Y)) % playArea.Height);
+            break;
+
+          case Commands.BACK:
+            RecognitionHighlight(BACK);
+            TurtlePosition = new Point((playArea.Width + turtleTranslation.X - (displacementAmount * Displacements[CurrentDirection].X)) % playArea.Width,
+                                                (playArea.Height + turtleTranslation.Y - (displacementAmount * Displacements[CurrentDirection].Y)) % playArea.Height);
+            break;
+
+          case Commands.LEFT:
+            RecognitionHighlight(LEFT);
+            CurrentDirection = (Direction)(((int)CurrentDirection + 270) % 360); //do not use - 90, do not want to end up with negative numbers (plus can't use Math.Abs on the result of the modulo operation, will end up with wrong number)
+            break;
+
+          case Commands.RIGHT:
+            RecognitionHighlight(RIGHT);
+            CurrentDirection = (Direction)Math.Abs(((int)CurrentDirection + 90) % 360);
+            break;
+
+          case Commands.PENDOWN:
+            RecognitionHighlight(PENDOWN);
+            PenIsDown = true;
+            break;
+
+          case Commands.PENUP:
+            RecognitionHighlight(PENUP);
+            PenIsDown = false;
+            break;
+
+          case Commands.BIGGER:
+            RecognitionHighlight(BIGGER);
+            turtleScale.ScaleX *= ScaleFactor;
+            turtleScale.ScaleY *= ScaleFactor;
+            displacementAmount *= ScaleFactor; //Bigger turtles move in bigger steps
+            penThickness *= ScaleFactor; //Bigger turtles leave thicker trails
+            break;
+
+          case Commands.SMALLER:
+            RecognitionHighlight(SMALLER);
+            turtleScale.ScaleX /= ScaleFactor;
+            turtleScale.ScaleY /= ScaleFactor;
+            displacementAmount /= ScaleFactor; //Smaller turtles move in smaller steps
+            penThickness /= ScaleFactor; //Smaller turtles leave thiner trails
+            break;
+
+          case Commands.COLORS:
+            RecognitionHighlight(COLORS);
+            Dispatcher.BeginInvoke(new Action(() => { ColorUtils.ShowKnownColors(); })); //Do not call colorsHyperlink.DoClick() or ColorUtils.ShowKnownColors() directly since the latter uses MessageBox.Show which would block the speech recognition event thread, so we wouldn't be able to then speak the CLOSE command
+            break;
+
+          default:
+            RecognitionHighlight(COLORS);
+            PenColor = command.GetKnownColor();
+            break;
+        }
+      }
+    }
+
+    #region Command highlighting
 
     /// <summary>
-    /// Highlight/Unhighlight command at recognition instructions.
+    /// Highlight/Unhighlight command at command instructions.
     /// </summary>
-    /// <param name="span"></param>
-    private void RecognitionHighlight(Span span, bool highlight = true)
+    /// <param name="hyperlink"></param>
+    private void RecognitionHighlight(Hyperlink hyperlink, bool highlight = true)
     {
       if (highlight)
       {
-        span.Foreground = Brushes.DeepSkyBlue;
-        span.FontWeight = FontWeights.Bold;
+        hyperlink.Foreground = Brushes.DeepSkyBlue;
+        hyperlink.FontWeight = FontWeights.Bold;
       }
       else
       {
-        span.Foreground = (Brush)Resources["MediumGreyBrush"];
-        span.FontWeight = FontWeights.Normal;
+        hyperlink.Foreground = (Brush)Resources["MediumGreyBrush"];
+        hyperlink.FontWeight = FontWeights.Normal;
       }
     }
 
     /// <summary>
-    /// Remove any highlighting from recognition instructions.
+    /// Remove any highlighting from command instructions.
     /// </summary>
-    private void ClearRecognitionHighlights()
+    private void ClearCommandHighlights()
     {
-      foreach (Inline inline in txtSpeechCommands.Inlines)
+      foreach (Inline inline in txtCommands.Inlines)
       {
-        Span span = inline as Span;
-        if (span != null)
-          RecognitionHighlight(span, false);
+        Hyperlink hyperlink = inline as Hyperlink;
+        if (hyperlink != null)
+          RecognitionHighlight(hyperlink, false);
       }
     }
 
@@ -298,81 +401,9 @@ namespace SpeechTurtle
     /// </summary>
     /// <param name="sender">object sending the event.</param>
     /// <param name="e">event arguments.</param>
-    private void SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
+    private void Speech_Recognized(object sender, SpeechRecognizedEventArgs e)
     {
-      ClearRecognitionHighlights();
-
-      if (e.Result.Confidence >= ConfidenceThreshold)
-      {
-        string command = e.Result.Semantics.Value.ToString();
-        switch (command)
-        {
-          case SpeechCommands.CLOSE:
-            RecognitionHighlight(closeSpan);
-            if (!ColorUtils.CloseKnownColorsMessageBox())
-              Close(); //if the known colors MessageBox isn't open to close it, close the main app window (exit the app)
-            break;
-
-          case SpeechCommands.FORWARD:
-            RecognitionHighlight(forwardSpan);
-            TurtlePosition = new Point((playArea.Width + turtleTranslation.X + (displacementAmount * Displacements[CurrentDirection].X)) % playArea.Width,
-                                        (playArea.Height + turtleTranslation.Y + (displacementAmount * Displacements[CurrentDirection].Y)) % playArea.Height);
-            break;
-
-          case SpeechCommands.BACKWARD:
-            RecognitionHighlight(backSpan);
-            TurtlePosition = new Point((playArea.Width + turtleTranslation.X - (displacementAmount * Displacements[CurrentDirection].X)) % playArea.Width,
-                                        (playArea.Height + turtleTranslation.Y - (displacementAmount * Displacements[CurrentDirection].Y)) % playArea.Height);
-            break;
-
-          case SpeechCommands.LEFT:
-            RecognitionHighlight(leftSpan);
-            CurrentDirection = (Direction)(((int)CurrentDirection + 270) % 360); //do not use - 90, do not want to end up with negative numbers (plus can't use Math.Abs on the result of the modulo operation, will end up with wrong number)
-            break;
-
-          case SpeechCommands.RIGHT:
-            RecognitionHighlight(rightSpan);
-            CurrentDirection = (Direction)Math.Abs(((int)CurrentDirection + 90) % 360);
-            break;
-
-          case SpeechCommands.PENDOWN:
-            RecognitionHighlight(pendownSpan);
-            PenIsDown = true;
-            break;
-
-          case SpeechCommands.PENUP:
-            RecognitionHighlight(penupSpan);
-            PenIsDown = false;
-            break;
-
-          case SpeechCommands.BIGGER:
-            RecognitionHighlight(biggerSpan);
-            turtleScale.ScaleX *= ScaleFactor;
-            turtleScale.ScaleY *= ScaleFactor;
-            displacementAmount *= ScaleFactor; //Bigger turtles move in bigger steps
-            penThickness *= ScaleFactor; //Bigger turtles leave thicker trails
-            break;
-
-          case SpeechCommands.SMALLER:
-            RecognitionHighlight(smallerSpan);
-            turtleScale.ScaleX /= ScaleFactor;
-            turtleScale.ScaleY /= ScaleFactor;
-            displacementAmount /= ScaleFactor; //Smaller turtles move in smaller steps
-            penThickness /= ScaleFactor; //Smaller turtles leave thiner trails
-            break;
-
-          case SpeechCommands.COLORS:
-            RecognitionHighlight(colorsHyperlink);
-            Dispatcher.BeginInvoke(new Action(() => { ColorUtils.ShowKnownColors(); })); //Do not call colorsHyperlink.DoClick() or ColorUtils.ShowKnownColors() directly since the latter uses MessageBox.Show which would block the speech recognition event thread, so we wouldn't be able to then speak the CLOSE command
-            break;
-
-          default:
-            RecognitionHighlight(colorsHyperlink);
-            PenColor = command.GetKnownColor();
-            break;
-        }
-
-      }
+      ExecuteCommand(e.Result.Semantics.Value.ToString(), e.Result.Confidence);
     }
 
     /// <summary>
@@ -380,21 +411,28 @@ namespace SpeechTurtle
     /// </summary>
     /// <param name="sender">object sending the event.</param>
     /// <param name="e">event arguments.</param>
-    private void SpeechRejected(object sender, SpeechRecognitionRejectedEventArgs e)
+    private void Speech_Rejected(object sender, SpeechRecognitionRejectedEventArgs e)
     {
-      ClearRecognitionHighlights();
+      ClearCommandHighlights();
     }
 
     #endregion
 
     /// <summary>
-    /// Handles the Click event of the colorsHyperlink control.
+    /// Handles the Click event of the commands' Hyperlink controls.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
-    private void colorsHyperlink_Click(object sender, RoutedEventArgs e)
+    private void Command_Click(object sender, RoutedEventArgs e)
     {
-      ColorUtils.ShowKnownColors();
+      ExecuteCommand(((Hyperlink)sender).Name, confidence:1);
+    }
+
+    private void Window_KeyDown(object sender, KeyEventArgs e)
+    {
+      string command = null;
+      if (Commands.CommandShortcuts.TryGetValue(e.Key, out command))
+        ExecuteCommand(command, confidence:1);
     }
 
     #endregion

@@ -62,7 +62,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Models\Direction.cs" />
-    <Compile Include="Grammars\SpeechCommands.cs" />
+    <Compile Include="Grammars\Commands.cs" />
     <Compile Include="Grammars\SpeechGrammar_en.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
