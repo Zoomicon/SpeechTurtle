@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: ColorUtils.cs
-//Version: 20150902
+//Version: 20150903
 
 using System;
 using System.Collections.Generic;
@@ -83,10 +83,11 @@ namespace SpeechTurtle.Utils
       MessageBox.Show(string.Join(", ", GetKnownColorNames()), KNOWN_COLORS_MESSAGEBOX_CAPTION);
     }
 
-    public static bool CloseKnownColorsMessageBox()
+    public static bool CloseKnownColorsMessageBox() //based on DmitryG's answer at http://stackoverflow.com/questions/14522540/close-a-messagebox-after-several-seconds
     {
-      IntPtr mbWnd = FindWindow(null, KNOWN_COLORS_MESSAGEBOX_CAPTION);
-      if (mbWnd == IntPtr.Zero) return false; //Known colors MessageBox not found
+      IntPtr mbWnd = FindWindow("#32770", KNOWN_COLORS_MESSAGEBOX_CAPTION); // lpClassName is #32770 for MessageBox
+      if (mbWnd == IntPtr.Zero)
+        return false; //Known colors MessageBox not found
 
       SendMessage(mbWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero); //close that MessageBox
       return true;
