@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: KinectUtils.cs
-//Version: 20150829
+//Version: 20150905
 
 using Microsoft.Kinect;
 using Microsoft.Speech.AudioFormat;
@@ -66,6 +66,12 @@ namespace SpeechTurtle.Utils
     /// <param name="speechAudioFormat"></param>
     public static void SetInputToKinectSensor(this SpeechRecognitionEngine speechEngine, KinectSensor sensor, SpeechAudioFormatInfo speechAudioFormat = null)
     {
+      if (sensor == null)
+      {
+        speechEngine.SetInputToDefaultAudioDevice();
+        return;
+      }
+
       if (speechAudioFormat == null)
         speechAudioFormat = new SpeechAudioFormatInfo(EncodingFormat.Pcm, 16000, 16, 1, 32000, 2, null); //default input audio format (taken from SpeechBasics-WPF C# sample of Kinect SDK 1.8)
 
