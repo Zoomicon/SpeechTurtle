@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: MainWindows.xaml.cs
-//Version: 20150903
+//Version: 20150906
 
 //Credits:
 // based on sample "SpeechBasics-WPF" for C# (https://msdn.microsoft.com/en-us/library/hh855387.aspx)
@@ -152,11 +152,7 @@ namespace SpeechTurtle
       // This will prevent recognition accuracy from degrading over time.
       ////speechEngine.UpdateRecognizerSetting("AdaptationOn", 0);
 
-      if (sensor != null)
-        speechEngine.SetInputToKinectSensor(sensor);
-      else
-        speechEngine.SetInputToDefaultAudioDevice();
-
+      speechEngine.SetInputToKinectSensor(sensor); //if sensor==null, this call will fallback to SetInputToDefaultAudioDevice()
       speechEngine.RecognizeAsync(RecognizeMode.Multiple); //start speech recognition (set to keep on firing speech recognition events, not just once)
     }
 
