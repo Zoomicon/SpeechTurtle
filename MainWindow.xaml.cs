@@ -1,18 +1,17 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: MainWindows.xaml.cs
-//Version: 20150906
+//Version: 20150910
 
 //Credits:
 // based on sample "SpeechBasics-WPF" for C# (https://msdn.microsoft.com/en-us/library/hh855387.aspx)
 // from Microsoft Kinect SDK 1.8 (http://www.microsoft.com/en-us/download/details.aspx?id=40278)
 
 //TODO: Add functionality to Record and name sequences of commands in order to repeat later using their name (find some way to allow recursion down to some max level though)
-//TODO: Add history and UNDO/REDO commands (and possibly also display the history like a log with the current position and back being black and the undone stuff that can be redone being grey)
+//TODO: Add history and UNDO/REDO commands (and possibly also display the history like a log with the current position and back being black and the undone stuff that can be redone being grey) [see History window of Paint.net for example]
 //TODO: Apart from saying a color to change pen color, add extra more verbose command to change pen/foreground and background colors (as phrases). See https://msdn.microsoft.com/en-us/library/system.speech.recognition.choices(v=vs.110).aspx on how to do it
 //TODO: see open issues section at http://SpeechTurtle.codeplex.com
 
 using Microsoft.Kinect;
-using Microsoft.Speech.Recognition;
 using SpeechTurtle.Utils;
 using System;
 using System.Collections.Generic;
@@ -24,6 +23,12 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+
+#if USE_MICROSOFT_SPEECH
+using Microsoft.Speech.Recognition;
+#else
+using System.Speech.Recognition;
+#endif
 
 namespace SpeechTurtle
 {
@@ -41,7 +46,7 @@ namespace SpeechTurtle
     /// <summary>
     /// Speech utterance confidence below which we treat speech as if it hadn't been heard.
     /// </summary>
-    const double ConfidenceThreshold = 0.8; //use higher values to require more accurate recognition
+    const double ConfidenceThreshold = 0.7; //use higher values to require more accurate recognition
 
     /// <summary>
     /// Scaling factor for BIGGER / SMALLER commands.
@@ -71,7 +76,7 @@ namespace SpeechTurtle
     /// <summary>
     /// Speech recognition engine using audio data from Kinect.
     /// </summary>
-    private SpeechRecognitionEngine speechEngine;
+    private SpeechRecognitionEngine speechRecognitionEngine;
 
     /// <summary>
     /// Current direction where turtle is facing.
@@ -139,21 +144,21 @@ namespace SpeechTurtle
         imgKinect.Visibility = Visibility.Visible;
         ri = KinectUtils.GetKinectRecognizer(CultureInfo.GetCultureInfoByIetfLanguageTag("en-US"));
       }
-      speechEngine = (ri != null) ? new SpeechRecognitionEngine(ri.Id) : new SpeechRecognitionEngine();
+      speechRecognitionEngine = (ri != null) ? new SpeechRecognitionEngine(ri.Id) : new SpeechRecognitionEngine();
 
-      speechEngine.LoadGrammar(SpeechUtils.CreateGrammarFromXML(Properties.Resources.SpeechGrammar_en, "Main")); //could use SpeechGrammar_en.Create() to generate the grammar programmatically instead of loading it from an XML (resource) file
-      speechEngine.LoadGrammar(SpeechUtils.CreateGrammarFromNames(ColorUtils.GetKnownColorNames(), "en", "Colors"));
+      speechRecognitionEngine.LoadGrammar(SpeechRecognitionUtils.CreateGrammarFromXML(Properties.Resources.SpeechGrammar_en, "Main")); //could use SpeechGrammar_en.Create() to generate the grammar programmatically instead of loading it from an XML (resource) file
+      speechRecognitionEngine.LoadGrammar(SpeechRecognitionUtils.CreateGrammarFromNames(ColorUtils.GetKnownColorNames(), "en", "Colors"));
 
       //setup recognition event handlers
-      speechEngine.SpeechRecognized += Speech_Recognized;
-      speechEngine.SpeechRecognitionRejected += Speech_Rejected;
+      speechRecognitionEngine.SpeechRecognized += Speech_Recognized;
+      speechRecognitionEngine.SpeechRecognitionRejected += Speech_Rejected;
 
       // For long recognition sessions (a few hours or more), it may be beneficial to turn off adaptation of the acoustic model.
       // This will prevent recognition accuracy from degrading over time.
-      ////speechEngine.UpdateRecognizerSetting("AdaptationOn", 0);
+      ////speechRecognitionEngine.UpdateRecognizerSetting("AdaptationOn", 0);
 
-      speechEngine.SetInputToKinectSensor(sensor); //if sensor==null, this call will fallback to SetInputToDefaultAudioDevice()
-      speechEngine.RecognizeAsync(RecognizeMode.Multiple); //start speech recognition (set to keep on firing speech recognition events, not just once)
+      speechRecognitionEngine.SetInputToKinectSensor(sensor); //if sensor==null, this call will fallback to SetInputToDefaultAudioDevice()
+      speechRecognitionEngine.RecognizeAsync(RecognizeMode.Multiple); //start speech recognition (set to keep on firing speech recognition events, not just once)
     }
 
     #endregion
@@ -174,11 +179,11 @@ namespace SpeechTurtle
         sensor = null;
       }
 
-      if (null != speechEngine)
+      if (null != speechRecognitionEngine)
       {
-        speechEngine.SpeechRecognized -= Speech_Recognized;
-        speechEngine.SpeechRecognitionRejected -= Speech_Rejected;
-        speechEngine.RecognizeAsyncStop();
+        speechRecognitionEngine.SpeechRecognized -= Speech_Recognized;
+        speechRecognitionEngine.SpeechRecognitionRejected -= Speech_Rejected;
+        speechRecognitionEngine.RecognizeAsyncStop();
       }
     }
 

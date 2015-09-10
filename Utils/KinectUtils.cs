@@ -1,13 +1,19 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: KinectUtils.cs
-//Version: 20150905
+//Version: 20150910
 
 using Microsoft.Kinect;
-using Microsoft.Speech.AudioFormat;
-using Microsoft.Speech.Recognition;
 using System;
 using System.Globalization;
 using System.IO;
+
+#if USE_MICROSOFT_SPEECH
+using Microsoft.Speech.AudioFormat;
+using Microsoft.Speech.Recognition;
+#else
+using System.Speech.AudioFormat;
+using System.Speech.Recognition;
+#endif
 
 namespace SpeechTurtle.Utils
 {

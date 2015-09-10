@@ -1,29 +1,35 @@
 ﻿<!--
 Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 Filename: SpeechGrammar_en.xml
-Version: 20150903
+Version: 20150910
 -->
 
 <grammar
   xmlns="http://www.w3.org/2001/06/grammar"
-  tag-format="semantics/1.0-literals"
+  tag-format="semantics/1.0"
   version="1.0"
   root="rootRule"
-  xml:lang="en-US"
+  xml:lang="en"
   >
+
+  <!--
+    Note: System.Speech doesn't support tag-format="semantics/1.0-literals" (Microsoft.Speech does instead),
+    so using tag-format="semantics/1.0" and instead of <tag>x</tag> using <tag>out="x"</tag>
+  -->
 
   <rule id="rootRule">
     <one-of>
 
       <item>
-        <tag>CLOSE</tag>
+        <tag>out="CLOSE"</tag>
         <one-of>
           <item> close </item>
+          <item> exit </item>
         </one-of>
       </item>
 
       <item>
-        <tag>FORWARD</tag>
+        <tag>out="FORWARD"</tag>
         <one-of>
           <item> forward </item>
           <item> forwards </item>
@@ -32,7 +38,7 @@ Version: 20150903
       </item>
 
       <item>
-        <tag>BACK</tag>
+        <tag>out="BACK"</tag>
         <one-of>
           <item> back </item>
           <item> backward </item>
@@ -41,7 +47,7 @@ Version: 20150903
       </item>
 
       <item>
-        <tag>LEFT</tag>
+        <tag>out="LEFT"</tag>
         <one-of>
           <item> turn left </item>
           <item> left </item>
@@ -49,7 +55,7 @@ Version: 20150903
       </item>
 
       <item>
-        <tag>RIGHT</tag>
+        <tag>out="RIGHT"</tag>
         <one-of>
           <item> turn right </item>
           <item> right </item>
@@ -57,7 +63,7 @@ Version: 20150903
       </item>
 
       <item>
-        <tag>PENDOWN</tag>
+        <tag>out="PENDOWN"</tag>
         <one-of>
           <item> pen down </item>
           <item> start drawing </item>
@@ -66,7 +72,7 @@ Version: 20150903
       </item>
 
       <item>
-        <tag>PENUP</tag>
+        <tag>out="PENUP"</tag>
         <one-of>
           <item> pen up </item>
           <item> stop drawing </item>
@@ -76,7 +82,7 @@ Version: 20150903
       </item>
 
       <item>
-        <tag>BIGGER</tag>
+        <tag>out="BIGGER"</tag>
         <one-of>
           <item> bigger </item>
           <item> enlarge </item>
@@ -84,7 +90,7 @@ Version: 20150903
       </item>
 
       <item>
-        <tag>SMALLER</tag>
+        <tag>out="SMALLER"</tag>
         <one-of>
           <item> smaller </item>
           <item> shrink </item>
@@ -92,7 +98,7 @@ Version: 20150903
       </item>
 
       <item>
-        <tag>COLORS</tag>
+        <tag>out="COLORS"</tag>
         <one-of>
           <item> colors </item>
           <item> color </item>

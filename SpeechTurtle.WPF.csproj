@@ -45,10 +45,9 @@
     <Reference Include="Microsoft.Kinect">
       <HintPath>$(KINECTSDK10_DIR)\Assemblies\Microsoft.Kinect.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Speech, Version=11.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Speech" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
@@ -73,7 +72,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utils\ColorUtils.cs" />
-    <Compile Include="Utils\SpeechUtils.cs" />
+    <Compile Include="Utils\SpeechRecognitionUtils.cs" />
     <Compile Include="Utils\KinectUtils.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DesignTime>True</DesignTime>

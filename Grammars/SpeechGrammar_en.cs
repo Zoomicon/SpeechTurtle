@@ -1,9 +1,9 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: SpeechGrammar_en.cs
-//Version: 20150903
+//Version: 20150910
 
-using Microsoft.Speech.Recognition;
 using System.Globalization;
+using System.Speech.Recognition;
 
 namespace SpeechTurtle
 {
