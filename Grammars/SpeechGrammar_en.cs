@@ -3,7 +3,12 @@
 //Version: 20150910
 
 using System.Globalization;
+
+#if USE_MICROSOFT_SPEECH
+using Microsoft.Speech.Recognition;
+#else
 using System.Speech.Recognition;
+#endif
 
 namespace SpeechTurtle
 {
@@ -19,6 +24,7 @@ namespace SpeechTurtle
 
       //CLOSE//
       commands.Add(new SemanticResultValue("close", Commands.CLOSE));
+      commands.Add(new SemanticResultValue("exit", Commands.CLOSE));
 
       //FORWARD//
       commands.Add(new SemanticResultValue("forward", Commands.FORWARD));
