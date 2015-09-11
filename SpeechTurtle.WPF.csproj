@@ -36,7 +36,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Images\Kinect.ico</ApplicationIcon>
+    <ApplicationIcon>Images\Logo.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>SpeechTurtle.App</StartupObject>
@@ -106,8 +106,8 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\Kinect.ico" />
     <Resource Include="Images\Kinect.png" />
+    <Resource Include="Images\Logo.ico" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Grammars\SpeechGrammar_en.xml" />

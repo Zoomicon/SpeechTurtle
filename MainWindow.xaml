@@ -1,14 +1,15 @@
 ﻿<!--
 Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 Filename: MainWindows.xaml
-Version: 20150903
+Version: 20150911
 -->
 
 <Window x:Class="SpeechTurtle.MainWindow"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 
-      Title="SpeechTurtle"
+  Title="SpeechTurtle"
+  Icon="Images/Logo.ico"
   Width="640" Height="600"
 
   Loaded="Window_Loaded"
