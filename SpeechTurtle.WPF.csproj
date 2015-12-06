@@ -45,6 +45,22 @@
     <Reference Include="Microsoft.Kinect">
       <HintPath>$(KINECTSDK10_DIR)\Assemblies\Microsoft.Kinect.dll</HintPath>
     </Reference>
+    <Reference Include="SpeechLib.Models, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\SpeechLib.Models.1.3.0\lib\net40\SpeechLib.Models.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SpeechLib.Recognition, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\SpeechLib.Recognition.1.3.0\lib\net40\SpeechLib.Recognition.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SpeechLib.Recognition.KinectV1, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\SpeechLib.Recognition.KinectV1.1.3.0\lib\net40\SpeechLib.Recognition.KinectV1.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SpeechLib.Synthesis, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\SpeechLib.Synthesis.1.3.0\lib\net40\SpeechLib.Synthesis.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Speech" />
@@ -72,8 +88,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utils\ColorUtils.cs" />
-    <Compile Include="Utils\SpeechRecognitionUtils.cs" />
-    <Compile Include="Utils\KinectUtils.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DesignTime>True</DesignTime>
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -99,6 +113,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

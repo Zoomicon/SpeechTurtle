@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: MainWindows.xaml.cs
-//Version: 20150910
+//Version: 20151205
 
 //Credits:
 // based on sample "SpeechBasics-WPF" for C# (https://msdn.microsoft.com/en-us/library/hh855387.aspx)
@@ -23,12 +23,17 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using SpeechLib.Recognition;
 
 #if USE_MICROSOFT_SPEECH
 using Microsoft.Speech.Recognition;
 #else
 using System.Speech.Recognition;
 #endif
+
+using SpeechLib.Synthesis;
+using SpeechLib.Recognition.KinectV1;
+using SpeechLib.Models;
 
 namespace SpeechTurtle
 {
@@ -37,7 +42,7 @@ namespace SpeechTurtle
   /// Interaction logic for MainWindow.xaml
   /// </summary>
   [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-      Justification = "In a full-fledged application, the SpeechRecognitionEngine object should be properly disposed. Will implement in the future")]
+      Justification = "In a full-fledged application, the SpeechRecognition object should be properly disposed. Will implement in the future")]
   public partial class MainWindow : Window
   {
 
@@ -74,9 +79,14 @@ namespace SpeechTurtle
     private KinectSensor sensor;
 
     /// <summary>
-    /// Speech recognition engine using audio data from Kinect.
+    /// Speech synthesis .
     /// </summary>
-    private SpeechRecognitionEngine speechRecognitionEngine;
+    private ISpeechSynthesis speechSynthesis;
+
+    /// <summary>
+    /// Speech recognition  (using audio data from Kinect if connected).
+    /// </summary>
+    private ISpeechRecognition speechRecognition;
 
     /// <summary>
     /// Current direction where turtle is facing.
@@ -124,15 +134,12 @@ namespace SpeechTurtle
     /// <summary>
     /// Execute initialization tasks.
     /// </summary>
-    /// <param name="sender">object sending the event</param>
-    /// <param name="e">event arguments</param>
-    private void Window_Loaded(object sender, RoutedEventArgs e)
+    protected void Init()
     {
-      sensor = KinectUtils.StartKinectSensor(); // This requires that a Kinect is connected at the time of app startup.
+      sensor = KinectV1Utils.StartKinectSensor(); // This requires that a Kinect is connected at the time of app startup.
       // To make the app robust against plug/unplug,
       // Microsoft recommends using KinectSensorChooser provided in Microsoft.Kinect.Toolkit (See components in Toolkit Browser).
 
-      RecognizerInfo ri = null;
       if (sensor == null)
       {
         statusBarText.Text = Properties.Resources.NoKinectReady;
@@ -142,23 +149,24 @@ namespace SpeechTurtle
       {
         statusBarText.Text = Properties.Resources.KinectReady;
         imgKinect.Visibility = Visibility.Visible;
-        ri = KinectUtils.GetKinectRecognizer(CultureInfo.GetCultureInfoByIetfLanguageTag("en-US"));
       }
-      speechRecognitionEngine = (ri != null) ? new SpeechRecognitionEngine(ri.Id) : new SpeechRecognitionEngine();
 
-      speechRecognitionEngine.LoadGrammar(SpeechRecognitionUtils.CreateGrammarFromXML(Properties.Resources.SpeechGrammar_en, "Main")); //could use SpeechGrammar_en.Create() to generate the grammar programmatically instead of loading it from an XML (resource) file
-      speechRecognitionEngine.LoadGrammar(SpeechRecognitionUtils.CreateGrammarFromNames(ColorUtils.GetKnownColorNames(), "en", "Colors"));
+      speechSynthesis = new SpeechSynthesis();
+
+      speechRecognition = new SpeechRecognitionKinectV1(); //will fallback to same engine used by SpeechRecognition class automatically if it can't find Kinect V1 sensor
+
+      speechRecognition.LoadGrammar(Properties.Resources.SpeechGrammar_en, "Main"); //could use SpeechGrammar_en.Create() to generate the grammar programmatically instead of loading it from an XML (resource) file
+      speechRecognition.LoadGrammar(SpeechRecognitionUtils.CreateGrammarFromNames(ColorUtils.GetKnownColorNames(), "en", "Colors"));
 
       //setup recognition event handlers
-      speechRecognitionEngine.SpeechRecognized += Speech_Recognized;
-      speechRecognitionEngine.SpeechRecognitionRejected += Speech_Rejected;
+      speechRecognition.Recognized += SpeechRecognition_Recognized;
+      speechRecognition.NotRecognized += SpeechRecognition_NotRecognized;
 
       // For long recognition sessions (a few hours or more), it may be beneficial to turn off adaptation of the acoustic model.
       // This will prevent recognition accuracy from degrading over time.
-      ////speechRecognitionEngine.UpdateRecognizerSetting("AdaptationOn", 0);
+      //// speechRecognition.AcousticModelAdaptation = false;
 
-      speechRecognitionEngine.SetInputToKinectSensor(sensor); //if sensor==null, this call will fallback to SetInputToDefaultAudioDevice()
-      speechRecognitionEngine.RecognizeAsync(RecognizeMode.Multiple); //start speech recognition (set to keep on firing speech recognition events, not just once)
+      speechRecognition.Start(); //start speech recognition (set to keep on firing speech recognition events, not just once)
     }
 
     #endregion
@@ -166,11 +174,9 @@ namespace SpeechTurtle
     #region --- Cleanup ---
 
     /// <summary>
-    /// Execute uninitialization tasks.
+    /// Execute cleanup tasks.
     /// </summary>
-    /// <param name="sender">object sending the event.</param>
-    /// <param name="e">event arguments.</param>
-    private void Window_Closing(object sender, CancelEventArgs e)
+    protected void Cleanup()
     {
       if (null != sensor)
       {
@@ -179,11 +185,11 @@ namespace SpeechTurtle
         sensor = null;
       }
 
-      if (null != speechRecognitionEngine)
+      if (null != speechRecognition)
       {
-        speechRecognitionEngine.SpeechRecognized -= Speech_Recognized;
-        speechRecognitionEngine.SpeechRecognitionRejected -= Speech_Rejected;
-        speechRecognitionEngine.RecognizeAsyncStop();
+        speechRecognition.Recognized -= SpeechRecognition_Recognized;
+        speechRecognition.NotRecognized -= SpeechRecognition_NotRecognized;
+        speechRecognition.Stop();
       }
     }
 
@@ -402,22 +408,42 @@ namespace SpeechTurtle
     /// </summary>
     /// <param name="sender">object sending the event.</param>
     /// <param name="e">event arguments.</param>
-    private void Speech_Recognized(object sender, SpeechRecognizedEventArgs e)
+    private void SpeechRecognition_Recognized(object sender, SpeechRecognitionEventArgs e)
     {
-      ExecuteCommand(e.Result.Semantics.Value.ToString(), e.Result.Confidence);
+      ExecuteCommand(e.command, e.confidence);
     }
 
     /// <summary>
-    /// Handler for rejected speech events.
+    /// Handler for not recognized speech events.
     /// </summary>
     /// <param name="sender">object sending the event.</param>
     /// <param name="e">event arguments.</param>
-    private void Speech_Rejected(object sender, SpeechRecognitionRejectedEventArgs e)
+    private void SpeechRecognition_NotRecognized(object sender, EventArgs e)
     {
       ClearCommandHighlights();
     }
 
     #endregion
+
+    /// <summary>
+    /// Window loaded event handler.
+    /// </summary>
+    /// <param name="sender">object sending the event</param>
+    /// <param name="e">event arguments</param>
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+      Init();
+    }
+
+    /// <summary>
+    /// Window closing event handler.
+    /// </summary>
+    /// <param name="sender">object sending the event.</param>
+    /// <param name="e">event arguments.</param>
+    private void Window_Closing(object sender, CancelEventArgs e)
+    {
+      Cleanup();
+    }
 
     /// <summary>
     /// Handles the Click event of the commands' Hyperlink controls.
@@ -426,14 +452,16 @@ namespace SpeechTurtle
     /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
     private void Command_Click(object sender, RoutedEventArgs e)
     {
-      ExecuteCommand(((Hyperlink)sender).Name, confidence:1);
+      string command = ((Hyperlink)sender).Name;
+      speechSynthesis.Speak(command);
+      ExecuteCommand(command, confidence: 1);
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
       string command = null;
       if (Commands.CommandShortcuts.TryGetValue(e.Key, out command))
-        ExecuteCommand(command, confidence:1);
+        ExecuteCommand(command, confidence: 1);
     }
 
     #endregion
