@@ -1,22 +1,20 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: MainWindows.xaml.cs
-//Version: 20151205
+//Version: 20151207
 
 //Credits:
 // based on sample "SpeechBasics-WPF" for C# (https://msdn.microsoft.com/en-us/library/hh855387.aspx)
 // from Microsoft Kinect SDK 1.8 (http://www.microsoft.com/en-us/download/details.aspx?id=40278)
 
 //TODO: Add functionality to Record and name sequences of commands in order to repeat later using their name (find some way to allow recursion down to some max level though)
-//TODO: Add history and UNDO/REDO commands (and possibly also display the history like a log with the current position and back being black and the undone stuff that can be redone being grey) [see History window of Paint.net for example]
+//TODO: Add history and UNDO/REDO commands (and possibly also display the history like a log with the current position and back being black and the undone stuff that can be redone being Grey) [see History window of Paint.net for example]
 //TODO: Apart from saying a color to change pen color, add extra more verbose command to change pen/foreground and background colors (as phrases). See https://msdn.microsoft.com/en-us/library/system.speech.recognition.choices(v=vs.110).aspx on how to do it
 //TODO: see open issues section at http://SpeechTurtle.codeplex.com
 
-using Microsoft.Kinect;
 using SpeechTurtle.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -34,6 +32,7 @@ using System.Speech.Recognition;
 using SpeechLib.Synthesis;
 using SpeechLib.Recognition.KinectV1;
 using SpeechLib.Models;
+using System.Threading;
 
 namespace SpeechTurtle
 {
@@ -51,7 +50,7 @@ namespace SpeechTurtle
     /// <summary>
     /// Speech utterance confidence below which we treat speech as if it hadn't been heard.
     /// </summary>
-    const double ConfidenceThreshold = 0.7; //use higher values to require more accurate recognition
+    const double ConfidenceThreshold = 0.8; //use higher values to require more accurate recognition
 
     /// <summary>
     /// Scaling factor for BIGGER / SMALLER commands.
@@ -72,11 +71,6 @@ namespace SpeechTurtle
     #endregion
 
     #region --- Fields ---
-
-    /// <summary>
-    /// Active Kinect sensor.
-    /// </summary>
-    private KinectSensor sensor;
 
     /// <summary>
     /// Speech synthesis .
@@ -136,11 +130,10 @@ namespace SpeechTurtle
     /// </summary>
     protected void Init()
     {
-      sensor = KinectV1Utils.StartKinectSensor(); // This requires that a Kinect is connected at the time of app startup.
+      // This requires that a Kinect is connected at the time of app startup.
       // To make the app robust against plug/unplug,
       // Microsoft recommends using KinectSensorChooser provided in Microsoft.Kinect.Toolkit (See components in Toolkit Browser).
-
-      if (sensor == null)
+      if (KinectV1Utils.StartKinectSensor() == null)
       {
         statusBarText.Text = Properties.Resources.NoKinectReady;
         imgKinect.Visibility = Visibility.Hidden;
@@ -178,19 +171,15 @@ namespace SpeechTurtle
     /// </summary>
     protected void Cleanup()
     {
-      if (null != sensor)
-      {
-        sensor.AudioSource.Stop();
-        sensor.Stop();
-        sensor = null;
-      }
-
-      if (null != speechRecognition)
+      if (speechRecognition != null)
       {
         speechRecognition.Recognized -= SpeechRecognition_Recognized;
         speechRecognition.NotRecognized -= SpeechRecognition_NotRecognized;
         speechRecognition.Stop();
+        (speechRecognition as IDisposable)?.Dispose();
       }
+
+      speechSynthesis = null;
     }
 
     #endregion
@@ -445,6 +434,15 @@ namespace SpeechTurtle
       Cleanup();
     }
 
+    #region Commands
+
+    public void SpeakCommand(string command)
+    {
+      //speechRecognition.Pause(); //TODO: not working correctly when async speech recognition method is used
+      speechSynthesis.Speak(command);
+      //speechRecognition.Resume();
+    }
+
     /// <summary>
     /// Handles the Click event of the commands' Hyperlink controls.
     /// </summary>
@@ -453,7 +451,7 @@ namespace SpeechTurtle
     private void Command_Click(object sender, RoutedEventArgs e)
     {
       string command = ((Hyperlink)sender).Name;
-      speechSynthesis.Speak(command);
+      SpeakCommand(command);
       ExecuteCommand(command, confidence: 1);
     }
 
@@ -463,6 +461,8 @@ namespace SpeechTurtle
       if (Commands.CommandShortcuts.TryGetValue(e.Key, out command))
         ExecuteCommand(command, confidence: 1);
     }
+
+    #endregion
 
     #endregion
 

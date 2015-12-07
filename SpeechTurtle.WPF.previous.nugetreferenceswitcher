@@ -1,0 +1,4 @@
+SpeechLib.Models	../SpeechLib/SpeechLib.Models/SpeechLib.Models.csproj	packages/SpeechLib.Models.1.3.0/lib/net40/SpeechLib.Models.dll
+SpeechLib.Recognition	../SpeechLib/SpeechLib.Recognition/SpeechLib.Recognition.csproj	packages/SpeechLib.Recognition.1.3.0/lib/net40/SpeechLib.Recognition.dll
+SpeechLib.Recognition.KinectV1	../SpeechLib/SpeechLib.Recognition.KinectV1/SpeechLib.Recognition.KinectV1.csproj	packages/SpeechLib.Recognition.KinectV1.1.3.0/lib/net40/SpeechLib.Recognition.KinectV1.dll
+SpeechLib.Synthesis	../SpeechLib/SpeechLib.Synthesis/SpeechLib.Synthesis.csproj	packages/SpeechLib.Synthesis.1.3.0/lib/net40/SpeechLib.Synthesis.dll
