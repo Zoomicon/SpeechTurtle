@@ -122,7 +122,7 @@ namespace SpeechTurtle
     public MainWindow()
     {
       InitializeComponent();
-      ShowPenColor();
+      Init();
     }
 
     /// <summary>
@@ -130,6 +130,8 @@ namespace SpeechTurtle
     /// </summary>
     protected void Init()
     {
+      ShowPenColor();
+
       // This requires that a Kinect is connected at the time of app startup.
       // To make the app robust against plug/unplug,
       // Microsoft recommends using KinectSensorChooser provided in Microsoft.Kinect.Toolkit (See components in Toolkit Browser).
@@ -175,7 +177,7 @@ namespace SpeechTurtle
       {
         speechRecognition.Recognized -= SpeechRecognition_Recognized;
         speechRecognition.NotRecognized -= SpeechRecognition_NotRecognized;
-        speechRecognition.Stop();
+        speechRecognition.Stop(waitForCurrentRecognitionToComplete:false);
 
         IDisposable disposable = (speechRecognition as IDisposable);
         if (disposable != null) disposable.Dispose();
@@ -422,16 +424,6 @@ namespace SpeechTurtle
     }
 
     #endregion
-
-    /// <summary>
-    /// Window loaded event handler.
-    /// </summary>
-    /// <param name="sender">object sending the event</param>
-    /// <param name="e">event arguments</param>
-    private void Window_Loaded(object sender, RoutedEventArgs e)
-    {
-      Init();
-    }
 
     /// <summary>
     /// Window closing event handler.
