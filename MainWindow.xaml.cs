@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: MainWindows.xaml.cs
-//Version: 20151207
+//Version: 20151208
 
 //Credits:
 // based on sample "SpeechBasics-WPF" for C# (https://msdn.microsoft.com/en-us/library/hh855387.aspx)
@@ -176,7 +176,9 @@ namespace SpeechTurtle
         speechRecognition.Recognized -= SpeechRecognition_Recognized;
         speechRecognition.NotRecognized -= SpeechRecognition_NotRecognized;
         speechRecognition.Stop();
-        (speechRecognition as IDisposable)?.Dispose();
+
+        IDisposable disposable = (speechRecognition as IDisposable);
+        if (disposable != null) disposable.Dispose();
       }
 
       speechSynthesis = null;
@@ -267,6 +269,13 @@ namespace SpeechTurtle
     private void ShowPenColor()
     {
       turtleHead.Fill = (PenIsDown) ? penBrush : (Brush)Resources["KinectPurpleBrush"];
+    }
+
+    public void SpeakCommand(string command)
+    {
+      speechRecognition.Pause();
+      speechSynthesis.Speak(command);
+      speechRecognition.Resume();
     }
 
     /// <summary>
@@ -435,13 +444,6 @@ namespace SpeechTurtle
     }
 
     #region Commands
-
-    public void SpeakCommand(string command)
-    {
-      //speechRecognition.Pause(); //TODO: not working correctly when async speech recognition method is used
-      speechSynthesis.Speak(command);
-      //speechRecognition.Resume();
-    }
 
     /// <summary>
     /// Handles the Click event of the commands' Hyperlink controls.

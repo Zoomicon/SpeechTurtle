@@ -1,6 +1,6 @@
 ﻿//Project: SpeechTurtle (http://SpeechTurtle.codeplex.com)
 //Filename: App.xaml.cs
-//Version: 20151206
+//Version: 20151208
 
 namespace SpeechTurtle
 {
@@ -21,8 +21,8 @@ namespace SpeechTurtle
       Exception inner = outer.InnerException;
       MessageBox.Show((inner ?? outer).Message);
 
-      //e.Handled = true; //handle the exception
-      //Shutdown(); //gracefully shutdown
+      e.Handled = true; //handle the exception
+      Shutdown(); //gracefully shutdown //TODO: could check here if the UI has loaded OK and in that case not shutdown maybe
     }
 
     #endregion
