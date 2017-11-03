@@ -1,4 +1,4 @@
-SpeechTurtle - http://SpeechTurtle.codeplex.com
+SpeechTurtle - http://github.com/Zoomicon/SpeechTurtle
 
 Project Description
 --------------------
